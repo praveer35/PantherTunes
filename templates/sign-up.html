@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Sign Up</title>
+   </head>
+
+   <style>
+        input{
+            border-radius:0.5em;
+            font-size:inherit;
+            outline: 1px solid transparent;
+            border:none;
+            width:100%;
+            color:#ffffff;
+            /* font-family: bierstadt; */
+            padding:0.7em 1em;
+            padding-left:2.4em;
+            box-sizing:border-box;
+            background: url('/static/ui_icons/back.png') no-repeat 0.5em;
+            background-size: 1.4em;
+            background-color:#292B2F;
+            margin-bottom:1em;
+        }
+
+        input::placeholder{
+            color:#BFBFBF;
+        }
+
+        input:focus {
+            outline:none;
+        }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover, 
+        input:-webkit-autofill:focus{
+            -webkit-box-shadow: 0 0 0 30px #292B2F inset;
+            box-shadow: 0 0 0 30px #292B2F inset;
+            -webkit-border: 1px solid #292B2F;
+            border: 1px solid #292B2F;
+            -webkit-text-fill-color: rgb(255, 255, 255);
+        }
+
+        button{
+            background-color:#1a006b;
+            border:none;
+            color:white;
+            border-radius: 0.5em;
+            padding:0.7em;
+            font-size:0.95em;
+            cursor:pointer;
+        }
+
+        a{
+            color:inherit;
+        }
+
+        #email-more-info{
+            position:relative;
+            cursor:pointer;
+        }
+
+        #email-more-info > div{
+            display:none;
+        }
+
+        #email-more-info:hover > div,
+        #email-more-info:focus > div{
+            display:block;
+        }
+
+
+   </style>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <main>
+          <br><br><br><br><br>
+        <div id="signup_boxes" style="font-size:clamp(0.9rem,1.4vw,1rem);max-width:80%;width:17em;margin:auto;">
+            <div style='color:var(--subtle-font);text-align:center;font-size:1.3em;margin-bottom:2em;position:relative;'>
+                Create Account
+            </div>
+                
+            <div style='width:100%;border-radius:0.5em;height:3em;'>
+                <label for="username">Username</label>
+                <input onchange='reset_error_messages()' id='username' placeholder="Username" type='text' style="background-image:url('/static/images/ui_icons/user_icon_white.png');">
+                <div id='username-error' class='error'></div>
+            </div>
+            <br><br>
+            <div style='width:100%;border-radius:0.5em;height:3em;'>
+                <label for="password">Password</label>
+                <input id='password' placeholder="Password" type='password' style="background-image:url('/static/images/ui_icons/password_icon.png');">
+                <div id='password-error' class='error'></div>
+            </div>
+            <br><br>
+            <label style="display:flex;height:2em;align-items:center;" for="email">
+                <span>Email<span style='color:var(--subtle-font);'></span></span>
+            </label>
+            <input id='email' placeholder="Email Address" type='email' style="background-image:url('/static/images/ui_icons/email.png');">
+            <div id='email-error' class='error'></div>
+            <div id='error_text' style='color:#c01717;font-size:1.1em;margin-top:20px;'></div>
+            <br><br><br>
+            <button style='width:100%;' onclick='create_account()'>Sign Up!</button>
+            
+
+        </div>
+
+        
+         
+      </div>
+      {% endblock %}
+   </body>
+</html>

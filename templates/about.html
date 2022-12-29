@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>About Us</title>
+      <style>
+
+.bubble {
+   width: 100%;
+   margin: 0px auto;
+   display: block;
+   min-height: 250px;
+}
+.left {
+   float: left;
+}
+.right {
+   float: right;
+}
+#title {
+   padding-top: 50px;
+}
+.subtitle {
+   text-align: left;
+}
+
+      </style>
+   </head>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content">
+         <br>
+         <h2 id="title">About Us</h2>
+         <div class="bubble">
+            <div class="right">
+               <img src="{{ url_for('static', filename='images/randomicon.png') }}" />
+            </div>
+            <h3 class="subtitle">What is Panther?</h3>
+            <p>The objective of this service is to...
+            </p>
+         </div>
+      </div>
+      {% endblock %}
+   </body>
+</html>

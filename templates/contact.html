@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Contact Us</title>
+   </head>
+   <style>
+
+.bubble {
+   width: 100%;
+   margin: 0px auto;
+}
+.left {
+   float: left;
+}
+.right {
+   float: right;
+}
+#title {
+   padding-top: 50px;
+}
+.subtitle {
+   text-align: left;
+}
+
+   </style>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" id="contact">
+         <br>
+         <h2 id="title">Contact Us</h2>
+         <div>
+           <div class="col m6 -large margin-bottom">
+             <i class="fa fa-map-marker" style="width:30px;margin:0 3px 8px 80px"></i> Portland, OR<br>
+             <i class="fa fa-phone" style="width:30px;margin:0 3px 8px 80px"></i> Phone: xxx<br>
+             <i class="fa fa-envelope" style="width:30px;margin:0 3px 8px 80px"> </i> Email: mail@mail.com<br>
+           </div>
+           <div>
+             <form action="/action_page.php" target="_blank" method="post">
+               <div class="row-padding" style="margin:0 +16px 8px +16px">
+                   <input class="input border" type="text" placeholder="Name" required name="Name">
+                   <input class="input border" type="text" placeholder="Email" required name="Email">
+                 </div>
+               <input class="input border" style="margin:0 +16px 8px +16px" type="text" placeholder="Message" required name="Message">
+               <button class="button black section right" type="submit">SEND</button>
+             </form>
+           </div>
+         </div>
+       </div>
+      {% endblock %}
+   </body>
+</html>

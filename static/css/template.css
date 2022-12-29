@@ -1,0 +1,134 @@
+body {
+    margin: 0px;
+    padding: 0px;
+    font-family: 'Heebo', sans-serif;
+    color: #444;
+    }
+html,body{
+    height: 100%
+}
+#holder{
+    min-height: 100%;
+    position: relative;
+}
+#middle {
+    padding-bottom: 100px;
+}
+header {
+    background-color: #b0b0ff;
+    height: 35px;
+    width: 100%;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    position: fixed;
+    z-index: 10;
+    }
+header h1.logo {
+    margin: 0;
+    font-size: 1.7em;
+    color: #000;
+    float: left;
+    }
+footer {
+    background-image: linear-gradient(to right, #6b006b, #1a006b);
+    color: white;
+    text-align: center;
+    margin-top: 0px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    width:100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+.container {
+    width: 1200px;
+    margin: 0 auto;
+    }
+.content {
+    width: 70%;
+    margin: 0px auto;
+    overflow: auto;
+}
+.bigbtn {
+    font-size: 16px;
+    background-color: #b0c0ff;
+    color: #1a006b;
+    border: 2px solid black;
+    padding: 10px;
+    box-shadow: 5px 5px 5px #333;
+}
+.bigbtn:hover {
+    background-color: #1a006b;
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 5px 5px 5px #888;
+}
+div.home {
+    padding: 10px 0 30px 0;
+    background-color: #E6E6FA;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+}
+div.about {
+    padding: 10px 0 30px 0;
+    background-color: #E6E6FA;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+    border-radius: 6px;
+}
+h1 {
+    text-align: center;
+}
+h2 {
+    font-size: 3em;
+    margin-top: 40px;
+    text-align: center;
+    letter-spacing: -2px;
+    }
+h3 {
+    font-size: 1.7em;
+    font-weight: 100;
+    margin-top: 30px;
+    text-align: center;
+    letter-spacing: -1px;
+}
+.menu {
+    float: right;
+    margin-top: 8px;
+}
+.menu li {
+    display: inline;
+}
+.menu li + li {
+    margin-left: 35px;
+}
+.menu li a {
+    color: #444;
+    text-decoration: none;
+}
+#sub-nav {
+    margin: 0px auto;
+    display: block;
+    width: 100%;
+ }
+ .sub-menu {
+     text-align: center;
+ }
+ .sub-menu li {
+     display: inline;
+     margin-left: 20px;
+     margin-right: 20px;
+ }
+ .sub-menu li a {
+     color: #00594a;
+     text-decoration: underline;
+     padding: 8px;
+     border-radius: 5px;
+     font-size: 20px;
+ }
+ .highlight {
+    background-color: #1a006b;
+ }

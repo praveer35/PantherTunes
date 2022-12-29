@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Panther</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+      <style>
+
+#options {
+   width: 70%;
+   margin: 0px auto;
+   overflow: auto;
+   padding-bottom: 30px;
+}
+.column {
+  float: left;
+  width: 33.33%;
+  padding: 30px;
+  box-sizing: border-box;
+  text-align: center;
+}
+#options:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+#left {
+   float: left;
+}
+#right {
+   float: right;
+}
+.divider {
+   background-color: black;
+   width: 100%;
+   height: 2px;
+   overflow: auto;
+}
+.sidebar {
+   position: fixed;
+   left: 0px;
+   top: 55px;
+   width: 293px;
+   height: calc(100% - 160px);
+   background-color: rgb(218, 218, 218);
+   padding-left: 20px;
+   padding-top: 10px;
+   padding-bottom: 160px;
+   overflow-y: scroll;
+}
+.sidebar h3 {
+   font-size: 18px;
+   color: black;
+   margin-bottom: 10px;
+   margin-top: 10px;
+   text-align: left;
+}
+.sidebar p {
+   color: #444;
+   margin-right: 15px;
+}
+.forums {
+   padding-top: 30px;
+   width: calc(100% - 530px);
+   margin-right: 230px;
+   height: 100%;
+   float: right;
+}
+.advanced-search {
+   position: fixed;
+   top: 65px;
+   right: 25px;
+   background-color: rgb(218, 218, 218);
+   width: 200px;
+   height: calc(100% - 160px);
+   max-height: 600px;
+   border-radius: 0;
+   overflow-y: scroll;
+}
+.advanced-search p {
+   margin: 20px;
+}
+.main-content {
+   width: 100%;
+   margin: 0px auto;
+   overflow: auto;
+}
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, .5);
+  box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+}
+.search {
+  margin: 0px auto;
+  width: 70%;
+  display: flex;
+}
+.searchTerm {
+  width: 100%;
+  border: 3px solid #1b14e5;
+  border-right: none;
+  padding: 5px;
+  height: 20px;
+  border-radius: 5px 0 0 5px;
+  outline: none;
+  color: black;
+  font-family: 'Poppins', sans-serif;
+}
+.searchTerm:focus{
+  color: #1b14e5;
+}
+.searchButton {
+  width: 40px;
+  height: 36px;
+  border: 1px solid #1b14e5;
+  background: #1b14e5;
+  text-align: center;
+  color: #fff;
+  border-radius: 0 5px 5px 0;
+  cursor: pointer;
+  font-size: 20px;
+}
+.feed {
+   margin: 0px auto;
+   width: 70%;
+   padding-bottom: 15px;
+}
+.post {
+   width: 100%;
+   margin-top: 15px;
+   border: 3px solid #1a006b;
+   border-radius: 0px 10px 0px 10px;
+   background-color: #e8ecff;
+   box-shadow: 5px 5px 5px #333;
+}
+.post * {
+   margin-left: 30px;
+   margin-right: 30px;
+   margin-bottom: 0px;
+   margin-top: 0px;
+   color: black;
+}
+.post:hover {
+   background-color: #1a006b;
+   cursor: pointer;
+   transition: 0.3s;
+   box-shadow: 5px 5px 5px #888;
+}
+.post:hover * {
+   color: white;
+   cursor: pointer;
+   transition: 0.3s;
+}
+.post .title {
+   padding-top: 15px;
+   font-size: 20px;
+}
+.post .desc {
+   font-size: 14px;
+}
+.post .author {
+   font-size: 10px;
+   text-align: right;
+   color: #666;
+   padding-bottom: 15px;
+}
+
+      </style>
+   </head>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="main-content">
+         <br>
+         <div class="sidebar">
+            <h3>WELCOME, {username}.</h3>
+            <p>MAKE A POST</p>
+            <h3>CURRENT PROJECTS</h3>
+            <p>You have no current projects. Make a post to start one!</p>
+            <p>{OR it will look like}</p>
+            <p>Project Title 1</p>
+            <p>Project Title 2</p>
+            <p>Project Title 3</p>
+            <p>Project Title 4</p>
+            <p>Project Title 5</p>
+            <p>Project Title 6</p>
+            <p>Project Title 7</p>
+            <p>Project Title 8</p>
+         </div>
+         <div class="forums">
+            <br><br>
+            <div class="search">
+               <input type="text" class="searchTerm" placeholder="Search a title or description of a post here...">
+               <button type="submit" class="searchButton">
+                  <i class="fa fa-search"></i>
+               </button>
+            </div>
+            <div class="feed">
+               <div class="post">
+                  <p class="title">Good lyrics for a country melody?</h3>
+                  <p class="desc">Let me know what you guys think. I wrote with the chords AMaj, Bmin, Emin, CMaj and then repeating.
+                     For the melody I tried it out on piano, but in the real version, I will use strings and guitar. I do
+                     want collaboration help, so if you know any good lyrics, feel free to let me know. Thanks guys.
+                  </p>
+                  <p class="author">Posted by: praveer35</p>
+               </div>
+               <div class="post">
+                  <p class="title">Need some chords</h3>
+                  <p class="desc">Hey everyone! I'm hoping to find some help with a chord progression I'm trying to write for a new song. I'm looking for something a bit mellow and dreamy, but with a bit of energy too. Does anyone have any ideas or tips? Any help would be greatly appreciated!
+                  </p>
+                  <p class="author">Posted by: praveer35</p>
+               </div>
+               <div class="post">
+                  <p class="title">What should this lyric be?</h3>
+                  <p class="desc">I'm writing a song and I'm having trouble coming up with the right lyric for a specific line. Does anyone have any suggestions? The context of the line is that the singer is reflecting on a past relationship, and I'm looking for something that conveys a sense of nostalgia and longing.
+                     Thanks in advance for your help!
+                  </p>
+                  <p class="author">Posted by: praveer35</p>
+               </div>
+               <div class="post">
+                  <p class="title">Good lyrics for a country melody?</h3>
+                  <p class="desc">Let me know what you guys think. I wrote with the chords AMaj, Bmin, Emin, CMaj and then repeating.
+                     For the melody I tried it out on piano, but in the real version, I will use strings and guitar. I do
+                     want collaboration help, so if you know any good lyrics, feel free to let me know. Thanks guys.
+                  </p>
+                  <p class="author">Posted by: praveer35</p>
+               </div>
+               <div class="post">
+                  <p class="title">Need some chords</h3>
+                  <p class="desc">Hey everyone! I'm hoping to find some help with a chord progression I'm trying to write for a new song. I'm looking for something a bit mellow and dreamy, but with a bit of energy too. Does anyone have any ideas or tips? Any help would be greatly appreciated!
+                  </p>
+                  <p class="author">Posted by: praveer35</p>
+               </div>
+            </div>
+         </div>
+         <div class="advanced-search">
+            <p style="text-align:center">Music Category</p>
+            <p><input type="checkbox"> Pop</p>
+            <p><input type="checkbox"> Rock</p>
+            <p><input type="checkbox"> R&B</p>
+            <p><input type="checkbox"> Rap</p>
+            <br>
+            <p style="text-align:center">Or You Need...</p>
+            <p><input type="checkbox"> Lyrics Help</p>
+            <p><input type="checkbox"> Melody Help</p>
+            <p><input type="checkbox"> Chords Help</p>
+            <p><input type="checkbox"> Production Help</p>
+            <br>
+            <button style="margin-left:20px;margin-bottom:20px;" class="bigbtn">Search</button>
+         </div>
+      </div>
+      {% endblock %}
+   </body>
+</html>

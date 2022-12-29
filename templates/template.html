@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Flask Parent Template</title>
+      <link rel="stylesheet" href="{{ url_for('static', filename='css/template.css') }}">
+      <!--<link rel="stylesheet" href="template.css">-->
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Heebo&display=swap" rel="stylesheet">
+      <style>
+
+#signin {
+   background-color: white;
+   color: #444;
+   padding: 8px;
+   border-radius: 5px;
+}
+#signin:hover {
+   background-color: #1a006b;
+   color: white;
+   transition: 0.3s;
+}
+      </style>
+   </head>
+   <body>
+      <div id="holder">
+         <header>
+            <div class="container">
+               <h1 class="logo"><a style="text-decoration:none;color:#000;" href="{{ url_for('home') }}">Panther&trade;</a></h1>
+               <strong>
+                  <nav>
+                     <ul class="menu">
+                        <li><a href="{{ url_for('about') }}">About Us</a></li>
+                        <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+                        <li><a id="signin" href="{{ url_for('sign_in') }}">Sign In</a></li>
+                     </ul>
+                  </nav>
+               </strong>
+            </div>
+         </header>
+         <div id="middle">
+         {% block content %}
+         {% endblock %}
+         </div>
+         <footer>
+            <p>Copyrighted 2022. Created by Panther Music Inc.</p>
+         </footer>
+      </div>
+   </body>
+</html>
