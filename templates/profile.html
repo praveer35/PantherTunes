@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Profile</title>
+   </head>
+   <script>
+         path = window.location.hostname
+         if (path == '127.0.0.1'){
+            path += ':1601'
+         }
+         // else if (window.location.protocol != 'https:'){
+         //     window.location.href = 'https://domain/sign-in'
+         // }
+
+         var window_url = window.location.protocol+'//'+path;
+         redirect_to = 'profile'
+         let url_string = window.location.href//if there is a redirect value in url it means we need to remember where to rediretc the user to once signed in
+         let url = new URL(url_string);
+         let c = url.searchParams.get('redirect');
+         if (c != null){
+            redirect_to = c;
+         }
+
+         function delete_post(event) {
+            data = {'post_id': event.target.id};
+            httpGetAsyncPost(window_url+'/profile', post_deleted, data);
+         }
+
+         function post_deleted(data) {
+            data = JSON.parse(data)
+            if (data['state'] == 'success') {
+               if (redirect_to != '') {
+                  redirect_to = '/'+redirect_to;
+               }
+               window.location.href = window_url+redirect_to;
+            } else {
+               alert('Error: ' + data['state']);
+            }
+         }
+
+         function httpGetAsyncPost(theUrl, callback, data){
+            //alert(JSON.stringify(data));
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function() {
+               if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                  callback(xmlHttp.responseText);
+               }
+            }
+            xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+            //alert('c');
+            xmlHttp.send(JSON.stringify(data));
+            //alert('d');
+         }
+
+   </script>
+   <style>
+      .feed {
+         margin: 0px auto;
+         width: 70%;
+         padding-bottom: 15px;
+      }
+      .post {
+         width: 100%;
+         margin-top: 15px;
+         border: 3px solid #1a006b;
+         border-radius: 0px 10px 0px 10px;
+         background-color: #e8ecff;
+         box-shadow: 5px 5px 5px #333;
+      }
+      .post * {
+         margin-left: 30px;
+         margin-right: 30px;
+         margin-bottom: 0px;
+         margin-top: 0px;
+         color: black;
+      }
+      .post:hover {
+         background-color: #1a006b;
+         cursor: pointer;
+         transition: 0.3s;
+         box-shadow: 5px 5px 5px #888;
+      }
+      .post:hover * {
+         color: white;
+         cursor: pointer;
+         transition: 0.3s;
+      }
+      .post .title {
+         padding-top: 15px;
+         font-size: 20px;
+      }
+      .post .desc {
+         font-size: 14px;
+      }
+      .post .author {
+         font-size: 10px;
+         text-align: right;
+         color: #666;
+         padding-bottom: 15px;
+      }
+   </style>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" style="width:90%">
+         <br>
+         <h2 id="title">{{ session.name }}</h2>
+         <br><br>
+         <a href="{{ url_for('logout') }}">Log out</a>
+         <br>
+         <div class="feed">
+            {% if len > 0: %}
+            {% for post in user_posts %}
+            <div class="post">
+               <p class="title">{{ post['title'] }}</h3>
+               {% for para in post['post'] %}
+               {% if para == "": %}
+               <p class="desc"><br></p>
+               {% else %}
+               <p class="desc">{{ para }}</p>
+               {% endif %}
+               {% endfor %}
+               <p class="author">Posted by: {{ post['username'] }}</p>
+               <button id="{{ post['post_id'] }}" onclick="delete_post(event)">Delete</button>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p>No posts yet. Click <a href="{{ url_for('create_post') }}">here</a> to make your first post!</p>
+            {% endif %}
+         </div>
+      </div>
+      <br><br><br>
+      {% endblock %}
+   </body>
+</html>

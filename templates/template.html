@@ -27,13 +27,17 @@
       <div id="holder">
          <header>
             <div class="container">
-               <h1 class="logo"><a style="text-decoration:none;color:#000;" href="{{ url_for('home') }}">Panther&trade;</a></h1>
+               <h1 class="logo"><a style="text-decoration:none;color:#000;" href="{{ url_for('home') }}">PantherTunes&trade;</a></h1>
                <strong>
                   <nav>
                      <ul class="menu">
                         <li><a href="{{ url_for('about') }}">About Us</a></li>
                         <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
-                        <li><a id="signin" href="{{ url_for('sign_in') }}">Sign In</a></li>
+                        {% if not session.name or session.name == "": %}
+                           <li><a id="signin" href="{{ url_for('sign_in') }}">Sign In</a></li>
+                        {% else %}
+                           <li><a id="signin" href="{{ url_for('profile') }}">{{ session.name }}</a></li>
+                        {% endif %}
                      </ul>
                   </nav>
                </strong>
@@ -44,7 +48,7 @@
          {% endblock %}
          </div>
          <footer>
-            <p>Copyrighted 2022. Created by Panther Music Inc.</p>
+            <p>Copyrighted 2022. Created by PantherTunes Inc.</p>
          </footer>
       </div>
    </body>

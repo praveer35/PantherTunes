@@ -5,6 +5,100 @@
       <title>Sign Up</title>
    </head>
 
+   <script>
+    path = window.location.hostname
+    if (path == '127.0.0.1'){
+        path += ':1601'
+    }
+    // else if (window.location.protocol != 'https:'){
+    //     window.location.href = 'https://domain/sign-in'
+    // }
+    
+    var window_url = window.location.protocol+'//'+path;
+    
+    redirect_to = ''
+    let url_string = window.location.href//if there is a redirect value in url it means we need to remember where to rediretc the user to once signed in
+    let url = new URL(url_string);
+    let c = url.searchParams.get('redirect');
+    if (c != null){
+        redirect_to = c;
+    }
+    window.history.pushState({ additionalInformation: 'Cleaning url' }, 'PantherTunes', '?');
+
+    function create_account(){
+        if (document.getElementById('username').value != '' && document.getElementById('password').value != '' && document.getElementById('email').value != ''){
+            console.log("creating account");
+            signup_checked();
+        }
+        else{
+            document.getElementById('error_text').innerHTML = 'Please enter a username, password, and email';
+            //alert('Please enter a username, password, and email');
+        }
+    }
+    
+    function signup_checked(){
+        // document.getElementById('reset_password_prompt').style.display = 'none'
+        // device = detect_device()
+        data = {'username':document.getElementById('username').value,
+                    'password':document.getElementById('password').value,
+                    'email':document.getElementById('email').value}
+        //alert('b');
+        httpGetAsyncPost(window_url+'/sign-up', signed_up,data)
+    }
+
+    function signed_up(data){
+        //alert('e');
+        data = JSON.parse(data)
+        if (data['state'] == 'email not unique') {
+            document.getElementById('error_text').innerHTML = 'Email already registered.';
+        } else if (data['state'] == 'username not unique') {
+            document.getElementById('error_text').innerHTML = 'Username not unique! Try another username.';
+        } else if (data['state'] == 'done') {
+            //localStorage.user_token = data['user_token'];
+            //localStorage.username = data['username'];
+            //set the cookie to expire in 200 years time (aka never)
+            //document.cookie = 'username = '+data['username']+';expires = Thu, 01 Jan '+(new Date().getFullYear()+200)+' 00:00:00 GMT'
+            sessionStorage.removeItem('profile_pic');
+            if (redirect_to != ''){
+                redirect_to = '/'+redirect_to;
+            }
+            window.location.href = window_url+redirect_to;
+        } else {
+            document.getElementById('error_text').innerHTML = data['state'];
+        }
+        /*else if(data['error_code'] == 1){
+            document.getElementById('username_text').innerHTML = 'Incorrect Username or Password';
+            if (data['has_email'] == true){//if the user has a recovery email for the given username ask if they need to reset password
+                document.getElementById('reset_password_prompt').style.display = 'block'
+            }
+        }
+        else{
+            document.getElementById('username_text').innerHTML = 'Internal Server Error - '+data['log'];
+        }*/
+    }
+
+    function httpGetAsyncPost(theUrl, callback,data){
+        //alert(JSON.stringify(data));
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                callback(xmlHttp.responseText);
+            }
+        }
+        xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+        //alert('c');
+        xmlHttp.send(JSON.stringify(data));
+        //alert('d');
+    }
+
+    document.onkeydown = function(evt) {
+        evt = evt || window.event;
+        if (evt.keyCode == 13){//enter
+            signin()
+            }
+    };
+    </script>
+
    <style>
         input{
             border-radius:0.5em;

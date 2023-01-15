@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Create Post</title>
+   </head>
+   
+   <script>
+   path = window.location.hostname
+   if (path == '127.0.0.1'){
+      path += ':1601'
+   }
+   // else if (window.location.protocol != 'https:'){
+   //     window.location.href = 'https://domain/sign-in'
+   // }
+
+   var window_url = window.location.protocol+'//'+path;
+   redirect_to = ''
+   let url_string = window.location.href//if there is a redirect value in url it means we need to remember where to rediretc the user to once signed in
+   let url = new URL(url_string);
+   let c = url.searchParams.get('redirect');
+   if (c != null){
+      redirect_to = c;
+   }
+
+   function create_post() {
+      if (document.getElementById('post-title').value != '' && document.getElementById('desc').value != '') {
+         if (document.getElementById('project').value != 'create-new' || document.getElementById('project-title').value != '') {
+            post_getdata();
+         } else {
+            alert('Please enter a title to your new project');
+         }
+      }
+      else {
+         //document.getElementById('error_text').innerHTML = 'Please enter a username, password, and email';
+         alert('Please enter a title and post');
+      }
+   }
+
+   function post_getdata() {
+      var genreCollec = document.getElementsByName('genre');
+      var help_neededCollec = document.getElementsByName('help-needed');
+      var genre = 'Default'
+      var help_needed = 'Default';
+      for (var i = 0; i < genreCollec.length; i++) {
+         if (genreCollec[i].checked)
+            genre = genreCollec[i].value
+      }
+      for (var i = 0; i < help_neededCollec.length; i++) {
+         if (help_neededCollec[i].checked)
+            help_needed = help_neededCollec[i].value
+      }
+      var project_title, project_desc;
+      if (document.getElementById('project').value != 'create-new') {
+         project_title = '';
+         project_desc = '';
+      } else {
+         project_title = document.getElementById('project-title').value;
+         project_desc = document.getElementById('project-desc').value;
+      }
+      data = {'title':document.getElementById('post-title').value,
+               'desc':document.getElementById('desc').value,
+               'genre':genre,
+               'help_needed':help_needed,
+               'project_option':document.getElementById('project').value,
+               'project_title':project_title,
+               'project_desc':project_desc}
+      httpGetAsyncPost(window_url+'/create-post', post_created, data)
+   }
+
+   function post_created(data) {
+      data = JSON.parse(data)
+      if (data['state'] == 'success') {
+         if (redirect_to != '') {
+            redirect_to = '/'+redirect_to;
+         }
+         window.location.href = window_url+redirect_to;
+      } else {
+         alert('Error: ' + data['state']);
+      }
+   }
+
+   function httpGetAsyncPost(theUrl, callback, data){
+      //alert(JSON.stringify(data));
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function() {
+         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+            callback(xmlHttp.responseText);
+         }
+      }
+      xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+      //alert('c');
+      xmlHttp.send(JSON.stringify(data));
+      //alert('d');
+   }
+   
+   function updateProjectFields() {
+      var projectSelected = document.getElementById('project').value;
+      var projectFields = document.getElementById("project-fields");
+      if (projectSelected == 'create-new') {
+         projectFields.style.display = "block";
+      } else {
+         projectFields.style.display = "none";
+      }
+   }
+   </script>
+
+   <style>
+
+      .bubble {
+         width: 100%;
+         margin: 0px auto;
+         display: block;
+         min-height: 250px;
+      }
+      .left {
+         float: left;
+      }
+      .right {
+         float: right;
+      }
+      #title {
+         padding-top: 50px;
+      }
+      .subtitle {
+         text-align: left;
+      }
+      #form-box {
+          border: 1px solid gray;
+          border-radius: 10px;
+          padding: 20px;
+          padding-left: 40px;
+          padding-right: 40px;
+      }
+      textarea, input{
+          border-radius:10px;
+          font-size: inherit;
+          font-family: inherit;
+          /*outline: 1px solid transparent;*/
+          border: 1px solid #444;
+          color:#444;
+          /* font-family: bierstadt; */
+          padding:0.7em 1em;
+          padding-left: 1em;
+          box-sizing:border-box;
+          /*background: url('/static/ui_icons/back.png') no-repeat 0.5em;*/
+          /*background-size: 1.4em;*/
+          background-color:#fff;
+          resize: none;
+      }
+      
+      input::placeholder{
+          color:#BFBFBF;
+      }
+      
+      textarea:focus, input:focus {
+          color: #00336d;
+      }
+      span {
+          margin-bottom: 20px;
+          display: block;
+      }
+      ul.checkbox  { 
+        margin: 0; 
+        padding: 0; 
+        margin-left: 20px; 
+        list-style: none; 
+      } 
+      
+      ul.checkbox li input { 
+        margin-right: .25em; 
+      } 
+      
+      ul.checkbox li { 
+        border: 1px transparent solid; 
+        display:inline-block;
+        width:12em;
+      }
+      #submit {
+          margin: 0px auto;
+          display: block;
+          font-size: 85px;
+          width: 100px;
+          height: 100px;
+          color: #fff;
+          background: linear-gradient(to right, #bd00d6, #e7007fcc);
+          border-radius: 100%;
+          border: 1px solid black;
+          /*box-shadow: 4px 4px 4px #444;*/
+      }
+      #submit:hover {
+          color: #bd00d6;
+          background: #fff;
+          border: 1px solid #e7007fcc;
+          /*box-shadow: 2px 2px 2px #e7007fcc;*/
+          transition: 0.3s;
+          cursor: pointer;
+      }
+      
+   </style>
+
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" style="width:90%">
+         <br>
+         <h2 id="title">Make a Post</h2>
+         <div id="form-box">
+            <span>
+               Post Title: &emsp;<input id='post-title' style="width:50%;">
+            </span>
+            <span>
+               <br>
+                <textarea id='desc' rows="5" style="width:75%"></textarea>
+            </span>
+            Genre:
+            <input type="radio" name="genre" value="Default"> Default
+            <input type="radio" name="genre" value="Pop"> Pop
+            <input type="radio" name="genre" value="Rock"> Rock
+            <input type="radio" name="genre" value="R&B"> R&B
+            <input type="radio" name="genre" value="Rap"> Rap
+            <br>
+            Help Needed:
+            <input type="radio" name="help-needed" value="Default"> Default
+            <input type="radio" name="help-needed" value="Lyrics"> Lyrics
+            <input type="radio" name="help-needed" value="Melody"> Melody
+            <input type="radio" name="help-needed" value="Chords"> Chords
+            <input type="radio" name="help-needed" value="Production"> Production
+            <br><br>
+            <label for="cars">Choose a Project:</label>
+            <select name="project" id="project" onchange="updateProjectFields()">
+              <option value="no-collab">No Collaboration</option>
+              <option value="create-new">Creating a New Project</option>
+              {% for project in Projects %}
+              <option value="{{ project['project_id'] }}">{{ project['title'] }}</option>
+              {% endfor %}
+            </select>
+            <div id="project-fields" style="display:none;">
+               <h3>Let's make a quick title and description for this project.</h3>
+               <span>
+                  Project Title: &emsp;<input id='project-title' style="width:50%;">
+               </span>
+               <span>
+                  <span style="visibility:hidden;display:inline">Description: &emsp;</span>(You can write the description later, but we recommend you do it as soon as possible.)<br>
+                  Description: &emsp;<textarea id='project-desc' rows="5" style="width:75%"></textarea>
+               </span>
+            </div>
+            <br><br>
+            <button id="submit" onclick="create_post()">+</button>
+         </div>
+      <br><br><br>
+      {% endblock %}
+   </body>
+</html>
