@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>{{ project['title'] }}</title>
+      <style>
+
+.bubble {
+   width: 100%;
+   margin: 0px auto;
+   display: block;
+   min-height: 250px;
+}
+.left {
+   float: left;
+}
+.right {
+   float: right;
+}
+#title {
+   padding-top: 50px;
+}
+.subtitle {
+   text-align: left;
+}
+#createbtn {
+    font-size: 50px;
+    width: 60px;
+    height: 60px;
+    color: #fff;
+    background: linear-gradient(to right, #bd00d6, #e7007fcc);
+    border-radius: 100%;
+    border: 1px solid black;
+    margin-top: -30px;
+    /*box-shadow: 4px 4px 4px #444;*/
+}
+#createbtn:hover {
+    color: #bd00d6;
+    background: #fff;
+    border: 1px solid #e7007fcc;
+    /*box-shadow: 2px 2px 2px #e7007fcc;*/
+    transition: 0.3s;
+    cursor: pointer;
+}
+#post_update, #important_links, #updates {
+   border: 1px solid gray;
+   border-radius: 10px;
+   padding-left: 20px;
+   padding-right: 20px;
+}
+#post_update {
+    float: left;
+    width: 30%;
+    height: 150px;
+}
+#important_links {
+    margin-top: 20px;
+    float: left;
+    width: 30%;
+    height: 400px;
+}
+#updates {
+    float: right;
+    width: 60%;
+    height: 800px;
+}
+
+      </style>
+   </head>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" style="width:90%">
+         <br>
+         <h2 id="title">{{ project['title'] }}</h2>
+         <h3>{{ project['desc'] }}</h3>
+         <h4>Members: {{ ', '.join(project['usernames'].split(' ')) }}</h4>
+         <div id="sub-nav">
+            <ul class="sub-menu">
+               <li><a style="color:#fff;" class="highlight" href="{{ url_for('project',project_id=project['project_id']) }}">Feed</a></li>
+               <li><a href="{{ url_for('project_application',project_id=project['project_id']) }}">Applications</a></li>
+               <li><a href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat</a></li>
+            </ul>
+         </div>
+         <br><br>
+         <div id="updates">
+             <p style="font-size:20px;">Updates</p>
+         </div>
+         <div id="post_update">
+             <p style="font-size:20px;">Post Update</p><br>
+             <button id="createbtn">+</button>
+         </div>
+         <div id="important_links">
+             <p style="font-size:20px;">Important Links</p>
+         </div>
+      </div>
+      <br><br><br>
+      {% endblock %}
+   </body>
+</html>

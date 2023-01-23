@@ -2,175 +2,238 @@
 <html lang="en" dir="ltr">
    <head>
       <meta charset="utf-8">
-      <title>Panther</title>
+      <title>PantherTunes</title>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-      <style>
-
-#options {
-   width: 70%;
-   margin: 0px auto;
-   overflow: auto;
-   padding-bottom: 30px;
-}
-.column {
-  float: left;
-  width: 33.33%;
-  padding: 30px;
-  box-sizing: border-box;
-  text-align: center;
-}
-#options:after {
-  content: "";
-  display: table;
-  clear: both;
-}
-#left {
-   float: left;
-}
-#right {
-   float: right;
-}
-.divider {
-   background-color: black;
-   width: 100%;
-   height: 2px;
-   overflow: auto;
-}
-.sidebar {
-   position: fixed;
-   left: 0px;
-   top: 55px;
-   width: 293px;
-   height: calc(100% - 160px);
-   background-color: rgb(218, 218, 218);
-   padding-left: 20px;
-   padding-top: 10px;
-   padding-bottom: 160px;
-   overflow-y: scroll;
-}
-.sidebar h3 {
-   font-size: 18px;
-   color: black;
-   margin-bottom: 10px;
-   margin-top: 10px;
-   text-align: left;
-}
-.sidebar p {
-   color: #444;
-   margin-right: 15px;
-}
-.forums {
-   padding-top: 30px;
-   width: calc(100% - 530px);
-   margin-right: 230px;
-   height: 100%;
-   float: right;
-}
-.advanced-search {
-   position: absolute;
-   top: 65px;
-   right: 25px;
-   background-color: rgb(218, 218, 218);
-   width: 200px;
-   height: calc(100% - 160px);
-   max-height: 600px;
-   border-radius: 0;
-   overflow-y: scroll;
-}
-.advanced-search p {
-   margin: 20px;
-}
-.main-content {
-   width: 100%;
-   margin: 0px auto;
-   overflow: auto;
-}
-::-webkit-scrollbar {
-  -webkit-appearance: none;
-  width: 7px;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 4px;
-  background-color: rgba(0, 0, 0, .5);
-  box-shadow: 0 0 1px rgba(255, 255, 255, .5);
-}
-.search {
-  margin: 0px auto;
-  width: 70%;
-  display: flex;
-}
-.searchTerm {
-  width: 100%;
-  border: 3px solid #1b14e5;
-  border-right: none;
-  padding: 5px;
-  height: 20px;
-  border-radius: 5px 0 0 5px;
-  outline: none;
-  color: black;
-  font-family: 'Poppins', sans-serif;
-}
-.searchTerm:focus{
-  color: #1b14e5;
-}
-.searchButton {
-  width: 40px;
-  height: 36px;
-  border: 1px solid #1b14e5;
-  background: #1b14e5;
-  text-align: center;
-  color: #fff;
-  border-radius: 0 5px 5px 0;
-  cursor: pointer;
-  font-size: 20px;
-}
-.feed {
-   margin: 0px auto;
-   width: 70%;
-   padding-bottom: 15px;
-}
-.post {
-   width: 100%;
-   margin-top: 15px;
-   border: 3px solid #1a006b;
-   border-radius: 0px 10px 0px 10px;
-   background-color: #e8ecff;
-   box-shadow: 5px 5px 5px #333;
-}
-.post * {
-   margin-left: 30px;
-   margin-right: 30px;
-   margin-bottom: 0px;
-   margin-top: 0px;
-   color: black;
-}
-.post:hover {
-   background-color: #1a006b;
-   cursor: pointer;
-   transition: 0.3s;
-   box-shadow: 5px 5px 5px #888;
-}
-.post:hover * {
-   color: white;
-   cursor: pointer;
-   transition: 0.3s;
-}
-.post .title {
-   padding-top: 15px;
-   font-size: 20px;
-}
-.post .desc {
-   font-size: 14px;
-}
-.post .author {
-   font-size: 10px;
-   text-align: right;
-   color: #666;
-   padding-bottom: 15px;
-}
-
-      </style>
    </head>
+   <style>
+
+      #options {
+         width: 70%;
+         margin: 0px auto;
+         overflow: auto;
+         padding-bottom: 30px;
+      }
+      .column {
+        float: left;
+        width: 33.33%;
+        padding: 30px;
+        box-sizing: border-box;
+        text-align: center;
+      }
+      #options:after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+      #left {
+         float: left;
+      }
+      #right {
+         float: right;
+      }
+      .divider {
+         background-color: black;
+         width: 100%;
+         height: 2px;
+         overflow: auto;
+      }
+      .sidebar {
+         position: fixed;
+         left: 0px;
+         top: 55px;
+         width: 293px;
+         height: calc(100% - 160px);
+         background-color: rgb(218, 218, 218);
+         padding-left: 20px;
+         padding-top: 10px;
+         padding-bottom: 160px;
+         overflow-y: scroll;
+      }
+      .sidebar h3 {
+         font-size: 18px;
+         color: black;
+         margin-bottom: 10px;
+         margin-top: 10px;
+         text-align: left;
+      }
+      .sidebar p {
+         color: #444;
+         margin-right: 15px;
+      }
+      .forums {
+         padding-top: 30px;
+         width: calc(100% - 530px);
+         margin-right: 230px;
+         height: 100%;
+         float: right;
+      }
+      .advanced-search {
+         position: absolute;
+         top: 65px;
+         right: 25px;
+         background-color: rgb(218, 218, 218);
+         width: 200px;
+         height: calc(100% - 160px);
+         max-height: 600px;
+         border-radius: 0;
+         overflow-y: scroll;
+      }
+      .advanced-search p {
+         margin: 20px;
+      }
+      .main-content {
+         width: 100%;
+         margin: 0px auto;
+         overflow: auto;
+      }
+      ::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 7px;
+      }
+      ::-webkit-scrollbar-thumb {
+        border-radius: 4px;
+        background-color: rgba(0, 0, 0, .5);
+        box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+      }
+      .search {
+        margin: 0px auto;
+        width: 70%;
+        display: flex;
+      }
+      .searchTerm {
+        width: 100%;
+        border: 3px solid #1b14e5;
+        border-right: none;
+        padding: 5px;
+        height: 20px;
+        border-radius: 5px 0 0 5px;
+        outline: none;
+        color: black;
+        font-family: 'Poppins', sans-serif;
+      }
+      .searchTerm:focus{
+        color: #1b14e5;
+      }
+      .searchButton {
+        width: 40px;
+        height: 36px;
+        border: 1px solid #1b14e5;
+        background: #1b14e5;
+        text-align: center;
+        color: #fff;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+        font-size: 20px;
+      }
+      
+   </style>
+   <script>
+
+      function advanced_search() {
+         var genreToCheck = ["pop", "rock", "r&b", "rap"]
+         var helpToCheck = ["lyrics", "melody", "chords", "production"];
+         var genre_query = "";
+         var help_query = "";
+         var genre_checked = false;
+         var help_checked = false;
+         var i = 0;
+         while (i < genreToCheck.length) {
+            if (document.getElementById(genreToCheck[i]).checked) {
+               genre_query += genreToCheck[i] + "%";
+               genre_checked = true;
+            }
+            i++;
+         }
+         if (genre_checked) {
+            genre_query = genre_query.substr(0, genre_query.length - 1);
+         } else {
+            genre_query = "default";
+         }
+         i = 0;
+         while (i < helpToCheck.length) {
+            if (document.getElementById(helpToCheck[i]).checked) {
+               help_query += helpToCheck[i] + "%";
+               help_checked = true;
+            }
+            i++;
+         }
+         if (help_checked) {
+            help_query = help_query.substr(0, help_query.length - 1);
+         } else {
+            help_query = "default";
+         }
+         if (genre_query == "default" && help_query == "default") {
+            window.location.href = "/";
+         } else {
+            window.location.href = "/search/" + genre_query + "/" + help_query;
+         }
+      }
+
+      function search() {
+         var query = document.getElementById("search-query").value;
+         window.location.href = "/search/" + query;
+      }
+
+      function reply(event) {
+         var reply_id;
+         if (event.target.getAttribute('name') == 'comment-on-original') {
+            reply_id = '0';
+         } else {
+            reply_id = event.target.getAttribute('name');
+         }
+         var textboxID = 'textbox-' + event.target.getAttribute('name');
+         data = {
+            'action': 'comment',
+            'reply_id': reply_id,
+            'comment': document.getElementById(textboxID).value};
+         httpGetAsyncPost(window.location.href, end_func, data);
+      }
+
+      function like(event) {
+         data = {
+            'action': 'like',
+            'comment_id': event.target.getAttribute('name')};
+         httpGetAsyncPost(window.location.href, like_stored, data);
+      }
+
+      function end_func(data) {
+         data = JSON.parse(data);
+         if (data['state'] == 'success') {
+            window.location.reload();
+         } else {
+            alert('Error: ' + data['state']);
+         }
+      }
+
+      function like_stored(data) {
+         data = JSON.parse(data);
+         if (data['state'] != 'success') {
+            alert('Error: ' + data['state']);
+         }
+      }
+
+      function httpGetAsyncPost(theUrl, callback, data){
+         //alert(JSON.stringify(data));
+         var xmlHttp = new XMLHttpRequest();
+         xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+               callback(xmlHttp.responseText);
+            }
+         }
+         xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+         //alert('c');
+         xmlHttp.send(JSON.stringify(data));
+         //alert('d');
+      }
+
+      function show_box(event) {
+         var promptLineID = 'prompt-line-' + event.target.getAttribute('name');
+         var commentLineID = 'comment-line-' + event.target.getAttribute('name');
+         document.getElementById(promptLineID).style.display = "none";
+         document.getElementById(commentLineID).style.display = "block";
+      }
+
+   </script>
    <body>
       {% extends "template.html" %}
       {% block content %}
@@ -187,35 +250,53 @@
             {% if len_projects == 0: %}
             <p>You have no current projects. Make a post to start one!</p>
             {% else %}
+            <ol>
             {% for project in Projects %}
-            <p>{{ project['title'] }}</p>
+            <li><a href="{{ url_for('project',project_id=project['project_id']) }}">{{ project['title'] }}</a></li>
             {% endfor %}
+            </ol>
             {% endif %}
             {% endif %}
          </div>
          <div class="forums">
             <br><br>
             <div class="search">
-               <input type="text" class="searchTerm" placeholder="Search a title or description of a post here...">
-               <button type="submit" class="searchButton">
+               <input type="text" id="search-query" class="searchTerm" placeholder="Search a title or description of a post here...">
+               <button type="submit" class="searchButton" onclick="search()">
                   <i class="fa fa-search"></i>
                </button>
             </div>
             <div class="feed">
+               {% if genres_queuer and helplist_queuer: %}
+               <p>Searching for: {{ genres_queuer }} and {{ helplist_queuer }}</p>
+               {% elif genres_queuer and not helplist_queuer: %}
+               <p>Searching for: {{ genres_queuer }}</p>
+               {% elif not genres_queuer and helplist_queuer: %}
+               <p>Searching for: {{ helplist_queuer }}</p>
+               {% endif %}
                {% for post in Posts %}
-               <div class="post">
-                  <p class="title">{{ post['title'] }}</h3>
-                  {% for para in post['post'] %}
-                  {% if para == "": %}
-                  <p class="desc"><br></p>
-                  {% else %}
-                  <p class="desc">{{ para }}</p>
-                  {% endif %}
-                  {% endfor %}
-                  <p class="author">Posted by: {{ post['username'] }}</p>
-               </div>
+               <a style="text-decoration:none;" href="{{ url_for('post',post_id=post['post_id']) }}">
+                  <div class="post">
+                     <p class="title">{{ post['title'] }}</h3>
+                     {% for para in post['post'] %}
+                     {% if para == "": %}
+                     <p class="desc"><br></p>
+                     {% else %}
+                     <p class="desc">{{ para }}</p>
+                     {% endif %}
+                     {% endfor %}
+                     {% if post['music_genre'] != 'default' and post['help_needed'] != 'default' %}
+                     <p class="tags">#{{ post['music_genre'] }} and #{{ post['help_needed'] }}</p>
+                     {% elif post['music_genre'] != 'default' %}
+                     <p class="tags">#{{ post['music_genre'] }}</p>
+                     {% elif post['help_needed'] != 'default' %}
+                     <p class="tags">#{{ post['help_needed'] }}</p>
+                     {% endif %}
+                     <p class="author">Posted by: {{ post['username'] }}</p>
+                  </div>
+               </a>
                {% endfor %}
-               <div class="post">
+               <!--<div class="post">
                   <p class="title">Good lyrics for a country melody?</h3>
                   <p class="desc">Let me know what you guys think. I wrote with the chords AMaj, Bmin, Emin, CMaj and then repeating.
                      For the melody I tried it out on piano, but in the real version, I will use strings and guitar. I do
@@ -299,22 +380,54 @@
                   </p>
                   <p class="author">Posted by: praveer35</p>
                </div>
-            </div>
+            </div>-->
          </div>
          <div class="advanced-search">
             <p style="text-align:center">Music Category</p>
-            <p><input type="checkbox"> Pop</p>
-            <p><input type="checkbox"> Rock</p>
-            <p><input type="checkbox"> R&B</p>
-            <p><input type="checkbox"> Rap</p>
+            <p><input type="checkbox" id="pop"
+               {% if genres_queuer and '#pop' in genres_queuer: %}
+               checked
+               {% endif %}
+               > Pop</p>
+            <p><input type="checkbox" id="rock"
+               {% if genres_queuer and '#rock' in genres_queuer: %}
+               checked
+               {% endif %}
+               > Rock</p>
+            <p><input type="checkbox" id="r&b"
+               {% if genres_queuer and '#r&b' in genres_queuer: %}
+               checked
+               {% endif %}
+               > R&B</p>
+            <p><input type="checkbox" id="rap"
+               {% if genres_queuer and '#rap' in genres_queuer: %}
+               checked
+               {% endif %}
+               > Rap</p>
             <br>
-            <p style="text-align:center">Or You Need...</p>
-            <p><input type="checkbox"> Lyrics Help</p>
-            <p><input type="checkbox"> Melody Help</p>
-            <p><input type="checkbox"> Chords Help</p>
-            <p><input type="checkbox"> Production Help</p>
+            <p style="text-align:center">And You Need...</p>
+            <p><input type="checkbox" id="lyrics"
+               {% if helplist_queuer and '#lyrics' in helplist_queuer: %}
+               checked
+               {% endif %}
+               > Lyrics Help</p>
+            <p><input type="checkbox" id="melody"
+               {% if helplist_queuer and '#melody' in helplist_queuer: %}
+               checked
+               {% endif %}
+               > Melody Help</p>
+            <p><input type="checkbox" id="chords"
+               {% if helplist_queuer and '#chords' in helplist_queuer: %}
+               checked
+               {% endif %}
+               > Chords Help</p>
+            <p><input type="checkbox" id="production"
+               {% if helplist_queuer and '#production' in helplist_queuer: %}
+               checked
+               {% endif %}
+               > Production Help</p>
             <br>
-            <button style="margin-left:20px;margin-bottom:20px;" class="bigbtn">Search</button>
+            <button style="margin-left:20px;margin-bottom:20px;" class="bigbtn" onclick="advanced_search()">Search</button>
          </div>
       </div>
       {% endblock %}

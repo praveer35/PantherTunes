@@ -114,21 +114,70 @@ h3 {
     display: block;
     width: 100%;
  }
- .sub-menu {
-     text-align: center;
- }
- .sub-menu li {
-     display: inline;
-     margin-left: 20px;
-     margin-right: 20px;
- }
- .sub-menu li a {
-     color: #00594a;
-     text-decoration: underline;
-     padding: 8px;
-     border-radius: 5px;
-     font-size: 20px;
- }
- .highlight {
+.sub-menu {
+    text-align: center;
+}
+.sub-menu li {
+    display: inline;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+.sub-menu li a {
+    color: #00594a;
+    text-decoration: underline;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 20px;
+}
+.highlight {
     background-color: #1a006b;
- }
+}
+.feed {
+    margin: 0px auto;
+    width: 70%;
+    padding-bottom: 15px;
+}
+.post {
+    width: 100%;
+    margin-top: 15px;
+    border: 3px solid #1a006b;
+    border-radius: 0px 10px 0px 10px;
+    background-color: #e8ecff;
+    /*box-shadow: 5px 5px 5px #333;*/
+}
+.post * {
+    margin-left: 30px;
+    margin-right: 30px;
+    margin-bottom: 0px;
+    margin-top: 0px;
+    color: black;
+}
+.post:hover {
+    background-color: #1a006b;
+    cursor: pointer;
+    transition: 0.3s;
+    /*box-shadow: 5px 5px 5px #888;*/
+}
+.post:hover * {
+    color: white;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.post .title {
+    padding-top: 15px;
+    font-size: 20px;
+}
+.post .desc {
+    font-size: 14px;
+}
+.post .author {
+    font-size: 10px;
+    text-align: right;
+    color: #666;
+    padding-bottom: 15px;
+}
+.post .tags {
+    font-size: 10px;
+    color: #666;
+    padding-bottom: 0px;
+}

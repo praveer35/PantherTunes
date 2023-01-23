@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Post Template</title>
+   </head>
+   <style>
+
+      #options {
+         width: 70%;
+         margin: 0px auto;
+         overflow: auto;
+         padding-bottom: 30px;
+      }
+      .column {
+        float: left;
+        width: 33.33%;
+        padding: 30px;
+        box-sizing: border-box;
+        text-align: center;
+      }
+      .forums {
+         padding-top: 0px;
+         width: calc(100% - 530px);
+         margin-right: 200px;
+         height: 100%;
+         float: right;
+      }
+      #options:after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+      #left {
+         float: left;
+      }
+      #right {
+         float: right;
+      }
+      .divider {
+         background-color: black;
+         width: 100%;
+         height: 2px;
+         overflow: auto;
+      }
+      .sidebar {
+         position: fixed;
+         left: 0px;
+         top: 55px;
+         width: 293px;
+         height: calc(100% - 160px);
+         background-color: rgb(218, 218, 218);
+         padding-left: 20px;
+         padding-top: 10px;
+         padding-bottom: 160px;
+         overflow-y: scroll;
+      }
+      .sidebar h3 {
+         font-size: 18px;
+         color: black;
+         margin-bottom: 10px;
+         margin-top: 10px;
+         text-align: left;
+      }
+      .sidebar p {
+         color: #444;
+         margin-right: 15px;
+      }
+      .original-post .author {
+         font-size: 18px;
+         text-align: right;
+         color: #666;
+         padding-bottom: 0px;
+         margin-bottom: 0px;
+         float: left;
+      }
+      .original-post .title {
+         padding-top: 0px;
+         font-size: 35px;
+         margin-bottom: 0px;
+      }
+      .original-post .desc {
+         font-size: 18px;
+         margin-top: 0px;
+         margin-bottom: 0px;
+      }
+      .main-content {
+         width: 100%;
+         margin: 0px auto;
+         overflow: auto;
+      }
+      .submit {
+          font-size: 17px;
+          width: 30px;
+          height: 30px;
+          color: #fff;
+          background: linear-gradient(to right, #bd00d6, #e7007fcc);
+          border-radius: 100%;
+          border: 1px solid black;
+          /*box-shadow: 4px 4px 4px #444;*/
+      }
+      .submit:hover {
+          color: #bd00d6;
+          background: #fff;
+          border: 1px solid #e7007fcc;
+          /*box-shadow: 2px 2px 2px #e7007fcc;*/
+          transition: 0.3s;
+          cursor: pointer;
+      }
+      #comment {
+         float: left;
+      }
+      #prompt-line-comment-on-original {
+         text-align: center;
+      }
+      textarea, input{
+         border-radius:10px;
+         font-size: inherit;
+         font-family: inherit;
+         /*outline: 1px solid transparent;*/
+         border: 1px solid #444;
+         color:#444;
+         /* font-family: bierstadt; */
+         padding:0.7em 1em;
+         padding-left: 1em;
+         box-sizing:border-box;
+         /*background: url('/static/ui_icons/back.png') no-repeat 0.5em;*/
+         /*background-size: 1.4em;*/
+         background-color:#fff;
+         resize: none;
+      }
+      .comment-box {
+         padding-left: 5px;
+         border-left: 2px solid black;
+      }
+      .comment-box .author {
+         padding-top: 20px;
+         margin-bottom: 20px;
+      }
+      .comment-box .reply {
+         padding-bottom: 20px;
+         margin-top: 20px;
+      }
+      .comment-box p {
+         margin-top: 0px;
+         margin-bottom: 0px;
+      }
+
+   </style>
+   <script>
+
+      function delete_post(event) {
+         data = {
+            'action': 'delete_post',
+            'post_id': event.target.id};
+         httpGetAsyncPost(window.location.href, end_func, data);
+      }
+
+      function reply(event) {
+         var reply_id;
+         if (event.target.getAttribute('name') == 'comment-on-original') {
+            reply_id = '0';
+         } else {
+            reply_id = event.target.getAttribute('name');
+         }
+         var textboxID = 'textbox-' + event.target.getAttribute('name');
+         data = {
+            'action': 'comment',
+            'reply_id': reply_id,
+            'comment': document.getElementById(textboxID).value};
+         httpGetAsyncPost(window.location.href, end_func, data);
+      }
+
+      function like(event) {
+         //alert(event.target.style.color);
+         var ID = event.target.id;
+         var chosenElement = document.getElementById(ID);
+         if (chosenElement.style.backgroundColor != "blue") {
+            var likes = parseInt(document.getElementById("likes-" + event.target.getAttribute('name')).textContent.substring(7));
+            document.getElementById("likes-" + event.target.getAttribute('name')).textContent = "Likes: " + (likes + 1);
+            chosenElement.style.backgroundColor = "blue";
+            data = {
+            'action': 'like',
+            'comment_id': event.target.getAttribute('name')};
+         } else {
+            var likes = parseInt(document.getElementById("likes-" + event.target.getAttribute('name')).textContent.substring(7));
+            document.getElementById("likes-" + event.target.getAttribute('name')).textContent = "Likes: " + (likes - 1);
+            chosenElement.style.backgroundColor = "#ccc";
+            data = {
+            'action': 'unlike',
+            'comment_id': event.target.getAttribute('name')};
+         }
+         httpGetAsyncPost(window.location.href, like_stored, data);
+      }
+
+      function apply() {
+         if ('{{ can_apply }}' == 'False') {
+            alert("Your previous application is still pending.");
+         } else {
+            var postID = event.target.id;
+            window.location.href = "/apply/" + postID;
+         }
+      }
+
+      function end_func(data) {
+         data = JSON.parse(data);
+         if (data['state'] == 'success') {
+            window.location.reload();
+         } else {
+            alert('Error: ' + data['state']);
+         }
+      }
+
+      function like_stored(data) {
+         data = JSON.parse(data);
+         if (data['state'] != 'success') {
+            alert('Error: ' + data['state']);
+         }
+      }
+
+      function httpGetAsyncPost(theUrl, callback, data){
+         //alert(JSON.stringify(data));
+         var xmlHttp = new XMLHttpRequest();
+         xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+               callback(xmlHttp.responseText);
+            }
+         }
+         xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+         //alert('c');
+         xmlHttp.send(JSON.stringify(data));
+         //alert('d');
+      }
+
+      function show_box(event) {
+         var promptLineID = 'prompt-line-' + event.target.getAttribute('name');
+         var commentLineID = 'comment-line-' + event.target.getAttribute('name');
+         document.getElementById(promptLineID).style.display = "none";
+         document.getElementById(commentLineID).style.display = "block";
+      }
+
+   </script>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="main-content">
+         <br>
+         <div class="sidebar">
+            {% if not session.name or session.name == "": %}
+            <h3>You are not signed in. Sign in to make posts and start projects!</h3>
+            {% else %}
+            <h3>WELCOME, {{ session.name }}.</h3>
+            <a href="{{ url_for('create_post') }}">MAKE A POST</a>
+            <a href="{{ url_for('logout') }}">Log out</a>
+            <h3>CURRENT PROJECTS</h3>
+            {% if len_projects == 0: %}
+            <p>You have no current projects. Make a post to start one!</p>
+            {% else %}
+            <ol>
+            {% for project in Projects %}
+            <li><a href="{{ url_for('project',project_id=project['project_id']) }}">{{ project['title'] }}</a></li>
+            {% endfor %}
+            </ol>
+            {% endif %}
+            {% endif %}
+         </div>
+         <br><br><br>
+         <div class="forums">
+            <div class="original-post">
+               {% if original_post['project_id'] != 0 and session.name not in linked_project['usernames']: %}
+               <button onclick="apply()" id="{{ original_post['post_id'] }}">Apply</button>
+               {% endif %}
+               <p class="author">Posted by: {{ original_post['username'] }}</p><br>
+               <p class="title">{{ original_post['title'] }}</h3>
+               {% for para in original_post['post'] %}
+               {% if para == "": %}
+               <p class="desc"><br></p>
+               {% else %}
+               <p class="desc">{{ para }}</p>
+               {% endif %}
+               {% endfor %}
+            </div>
+            <div class="action-reply">
+               {% if not session.name or session.name == "": %}
+               <p id="prompt-line-comment-on-original">You are not signed in. Sign in <a href="{{ url_for('sign_in') }}">here</a> to comment.</p>
+               {% else %}
+               <p id="prompt-line-comment-on-original">Comment <button class="submit" name="comment-on-original" onclick="show_box(event)">+</button></p>
+               <div id="comment-line-comment-on-original" style="display:none;margin-top:10px;">
+                  <textarea id='textbox-comment-on-original' rows="5" style="width:75%;margin-bottom:20px;"></textarea>
+                  <button style="margin-left:20px;font-size:70px;width:80px;height:80px;position:relative;top:-50px;" class="submit" name="comment-on-original" onclick="reply(event)">+</button>
+               </div>
+               {% endif %}
+            </div>
+            <div class="divider" style="margin-bottom:20px;"></div>
+            {% for i in range(0, len): %}
+            <div class="comment-box" style="margin-left:{{ 60 + 30*post_comments[i]['position'] }}px;background-color:white;">
+               <p class="author">Posted by: {{ post_comments[i]['username'] }}</p>
+               {% for para in post_comments[i]['comment'] %}
+               {% if para == "": %}
+               <p><br></p>
+               {% else %}
+               <p>{{ para }}</p>
+               {% endif %}
+               {% endfor %}
+               <span id="likes-{{ post_comments[i]['comment_id'] }}">Likes: {{ post_comments[i]['likes'] }} </span>
+               {% if session.name and session.name != "": %}
+               <button class="like" 
+               {% if post_comments[i]['comment_id']|string in comments_liked: %}
+               style="background-color:blue;"
+               {% else %}
+               style="background-color:#ccc;"
+               {% endif %}
+               id="like-button-{{ post_comments[i]['comment_id'] }}" name="{{ post_comments[i]['comment_id'] }}" onclick="like(event)">+</button>
+               <p class="reply" id="prompt-line-{{ post_comments[i]['comment_id'] }}">Reply <button class="submit" name="{{ post_comments[i]['comment_id'] }}" onclick="show_box(event)">+</button></p>
+               <div id="comment-line-{{ post_comments[i]['comment_id'] }}" style="display:none;margin-top:10px;">
+                  <textarea id="textbox-{{ post_comments[i]['comment_id'] }}" rows="5" style="width:75%;margin-bottom:20px;"></textarea>
+                  <button style="margin-left:20px;font-size:70px;width:80px;height:80px;position:relative;top:-50px;" class="submit" name="{{ post_comments[i]['comment_id'] }}" onclick="reply(event)">+</button>
+               </div>
+               {% endif %}
+            </div>
+            {% endfor %}
+         </div>
+      </div>
+      {% endblock %}
+   </body>
+</html>

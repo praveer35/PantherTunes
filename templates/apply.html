@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Apply to "{{ project['title'] }}"</title>
+   </head>
+   
+   <script>
+   path = window.location.hostname
+   if (path == '127.0.0.1'){
+      path += ':1601'
+   }
+   // else if (window.location.protocol != 'https:'){
+   //     window.location.href = 'https://domain/sign-in'
+   // }
+
+   var window_url = window.location.protocol+'//'+path;
+   redirect_to = 'post/' + {{ post_id }};
+   let url_string = window.location.href//if there is a redirect value in url it means we need to remember where to rediretc the user to once signed in
+   let url = new URL(url_string);
+   let c = url.searchParams.get('redirect');
+   if (c != null){
+      redirect_to = c;
+   }
+
+   function apply() {
+      if (document.getElementById('pitch').value != '') {
+        application_getdata()
+      }
+      else {
+         //document.getElementById('error_text').innerHTML = 'Please enter a username, password, and email';
+         alert('Please enter your pitch');
+      }
+   }
+
+   function application_getdata() {
+      data = {'pitch':document.getElementById('pitch').value};
+      httpGetAsyncPost(window_url+'/apply/' + {{ post_id }}, application_created, data)
+   }
+
+   function application_created(data) {
+      data = JSON.parse(data);
+      if (data['state'] == 'success') {
+         if (redirect_to != '') {
+            redirect_to = '/'+redirect_to;
+         }
+         window.location.href = window_url+redirect_to;
+      } else {
+         alert('Error: ' + data['state']);
+      }
+   }
+
+   function httpGetAsyncPost(theUrl, callback, data){
+      //alert(JSON.stringify(data));
+      var xmlHttp = new XMLHttpRequest();
+      xmlHttp.onreadystatechange = function() {
+         if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+            callback(xmlHttp.responseText);
+         }
+      }
+      xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+      //alert('c');
+      xmlHttp.send(JSON.stringify(data));
+      //alert('d');
+   }
+
+   </script>
+
+   <style>
+
+      .bubble {
+         width: 100%;
+         margin: 0px auto;
+         display: block;
+         min-height: 250px;
+      }
+      .left {
+         float: left;
+      }
+      .right {
+         float: right;
+      }
+      #title {
+         padding-top: 50px;
+      }
+      .subtitle {
+         text-align: left;
+      }
+      #form-box {
+          border: 1px solid gray;
+          border-radius: 10px;
+          padding: 20px;
+          padding-left: 40px;
+          padding-right: 40px;
+      }
+      textarea, input{
+          border-radius:10px;
+          font-size: inherit;
+          font-family: inherit;
+          /*outline: 1px solid transparent;*/
+          border: 1px solid #444;
+          color:#444;
+          /* font-family: bierstadt; */
+          padding:0.7em 1em;
+          padding-left: 1em;
+          box-sizing:border-box;
+          /*background: url('/static/ui_icons/back.png') no-repeat 0.5em;*/
+          /*background-size: 1.4em;*/
+          background-color:#fff;
+          resize: none;
+      }
+      
+      input::placeholder{
+          color:#BFBFBF;
+      }
+      
+      textarea:focus, input:focus {
+          color: #00336d;
+      }
+      span {
+          margin-bottom: 20px;
+          display: block;
+      }
+      ul.checkbox  { 
+        margin: 0; 
+        padding: 0; 
+        margin-left: 20px; 
+        list-style: none; 
+      } 
+      
+      ul.checkbox li input { 
+        margin-right: .25em; 
+      } 
+      
+      ul.checkbox li { 
+        border: 1px transparent solid; 
+        display:inline-block;
+        width:12em;
+      }
+      #submit {
+          margin: 0px auto;
+          display: block;
+          font-size: 85px;
+          width: 100px;
+          height: 100px;
+          color: #fff;
+          background: linear-gradient(to right, #bd00d6, #e7007fcc);
+          border-radius: 100%;
+          border: 1px solid black;
+          /*box-shadow: 4px 4px 4px #444;*/
+      }
+      #submit:hover {
+          color: #bd00d6;
+          background: #fff;
+          border: 1px solid #e7007fcc;
+          /*box-shadow: 2px 2px 2px #e7007fcc;*/
+          transition: 0.3s;
+          cursor: pointer;
+      }
+      
+   </style>
+
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" style="width:90%">
+         <br>
+         <h2 id="title">Apply to "{{ project['title'] }}"</h2>
+         <h3>{{ project['desc'] }}</h3>
+         <h4>Members: {{ ', '.join(project['usernames'].split(' ')) }}</h4>
+         <div id="form-box">
+            <span>
+               Username: &emsp;{{ session.name }}
+            </span>
+            Quick pitch: <span>
+                <textarea id='pitch' rows="5" style="width:75%"></textarea>
+            </span>
+            <button id="submit" onclick="apply()">+</button>
+         </div>
+      <br><br><br>
+      {% endblock %}
+   </body>
+</html>
