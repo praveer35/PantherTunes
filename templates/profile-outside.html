@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>{{ username }}'s Profile</title>
+   </head>
+   <script>
+
+         function sort_posts() {
+            let to_url = '/profile';
+            to_url += '/{{ username }}';
+            to_url += '/sort/' + document.getElementById('post-select').value;
+            window.location.href = to_url;
+         }
+
+   </script>
+   <style>
+      
+   </style>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" style="width:90%">
+         <br>
+         <h2 id="title">{{ username }}</h2>
+         {% if bio.replace(" ", "") != "": %}
+         <h3 id="bio">{{ bio }}</h3>
+         {% endif %}
+         <br><br>
+         <div class="feed">
+            <h4>Total likes: {{ total_likes }}</h4>
+            {% if len > 0: %}
+            Sort Posts by: <select name="post-select" id="post-select" onchange="sort_posts()">
+               {% if sort == 'newest' %}
+               <option value="newest" selected>Newest</option>
+               {% else %}
+               <option value="newest">Newest</option>
+               {% endif %}
+               {% if sort == 'oldest' %}
+               <option value="oldest" selected>Oldest</option>
+               {% else %}
+               <option value="oldest">Oldest</option>
+               {% endif %}
+               {% if sort == 'popular' %}
+               <option value="popular" selected>Popular</option>
+               {% else %}
+               <option value="popular">Popular</option>
+               {% endif %}
+            </select>
+            {% for post in user_posts %}
+            <a style="text-decoration:none;" href="{{ url_for('post',post_id=post['post_id']) }}">
+               <div class="post">
+                  <p class="title">{{ post['title'] }}</h3>
+                  {% for para in post['post'] %}
+                  {% if para == "": %}
+                  <p class="desc"><br></p>
+                  {% else %}
+                  <p class="desc">{{ para }}</p>
+                  {% endif %}
+                  {% endfor %}
+                  <p class="author">Posted by: {{ post['username'] }}</p>
+               </div>
+            </a>
+            {% endfor %}
+            {% else %}
+            <p>No posts yet.</p>
+            {% endif %}
+         </div>
+      </div>
+      <br><br><br>
+      {% endblock %}
+   </body>
+</html>

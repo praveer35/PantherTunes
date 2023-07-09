@@ -12,10 +12,37 @@
    min-height: 250px;
 }
 .left {
-   float: left;
+   text-align: left;
 }
 .right {
-   float: right;
+   text-align: right;
+}
+.text {
+   width: 100%;
+}
+.left .msg {
+   background-color: rgb(88, 88, 88);
+   padding-left: 10px;
+   border-radius: 25px 25px 25px 0px;
+}
+.right .msg {
+   background-color: blue;
+   padding-right: 10px;
+   margin-top: 3px;
+   border-radius: 25px 25px 0px 25px;
+}
+.msg {
+   display: inline-block;
+   max-width: 70%;
+   border-radius: 25px;
+   color: white;
+   padding: 5px;
+   padding-left: 10px;
+   padding-right: 10px;
+}
+.sender {
+   margin-right: 5px;
+   margin-top: 10px;
 }
 #title {
    padding-top: 50px;
@@ -71,39 +98,269 @@ input::placeholder{
    border-right: 0px;
    border-bottom: 0px;
 }
+.chat-wrapper {
+   width: 80%;
+   margin: 0px auto;
+   display: flex;
+}
+.message-wrapper {
+   width: 70%;
+}
+.messager {
+   width: 100%;
+   padding: 20px;
+   border: 2px solid black;
+   /*border-radius: 10px;*/
+   border-top-left-radius: 25px;
+   margin: 0px auto;
+   height: 600px;
+   overflow: scroll;
+}
+.inputbox {
+   width: calc(100% + 40px);
+   margin: 0px auto;
+   border: 2px solid black;
+   border-top-width: 0px;
+   border-bottom-left-radius: 25px;
+   padding-bottom: 5px;
+}
+.activity-wrapper {
+   width: calc(30% - 10px);
+   border: 2px solid black;
+   margin-left: 43px;
+   border-left: 0px;
+   border-top-right-radius: 25px;
+   border-bottom-right-radius: 25px;
+   padding-left: 10px;
+   overflow: scroll;
+}
+.inputbox input {
+   width: calc(100% - 50px);
+   border-width: 0px;
+   background-color: transparent;
+}
+.inputbox input:focus {
+   outline: none;
+}
+.inputbox button {
+   width: 36px;
+   height: 36px;
+   border-radius: 100px;
+   color: white;
+   border: 2px solid white;
+   background-image: linear-gradient(to right, #6b006b, #1a006b);
+}
+.inputbox button:hover {
+   border-color: black;
+   color: #6b006b;
+   background-image: linear-gradient(to right, white, white);
+   transition: 0.3s;
+   cursor: pointer;
+}
+.time-label {
+   width: 100%; 
+   text-align: center; 
+   border-bottom: 1px solid #000; 
+   line-height: 0.1em;
+   margin: 30px 0 20px; 
+}
+.time-label span { 
+    background:#fff; 
+    padding:0 10px; 
+}
+.new {
+   border-bottom: 1px solid #1500ff;
+   color: #1500ff;
+}
 
       </style>
+   <script>
+
+      function showTimestamp(event) {
+         let ID = event.currentTarget.id;
+         let stpToShow = document.getElementById("stp-" + ID.substr(4));
+         stpToShow.style.visibility = 'visible';
+      }
+      
+      function hideTimestamp(event) {
+         let ID = event.currentTarget.id;
+         let stpToShow = document.getElementById("stp-" + ID.substr(4));
+         stpToShow.style.visibility = 'hidden';
+      }
+
+   </script>
    </head>
    <body>
       {% extends "template.html" %}
       {% block content %}
       <div class="content" style="width:90%">
          <br>
-         <h2 id="title">Chat</h2>
+         <h2 id="title">{{ project['title'] }}</h2>
          <div id="sub-nav">
-         <ul class="sub-menu">
-            <li><a href="{{ url_for('project',project_id=project['project_id']) }}">Feed</a></li>
-            <li><a href="{{ url_for('project_application',project_id=project['project_id']) }}">Applications</a></li>
-            <li><a style="color:#fff;" class="highlight" href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat</a></li>
-         </ul>
+            <ul class="sub-menu">
+               <li><a href="{{ url_for('project',project_id=project['project_id']) }}">Feed</a></li>
+               <li><a href="{{ url_for('project_application',project_id=project['project_id']) }}">Applications</a></li>
+               <li><a style="color:#fff;" class="highlight" href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat
+               {% if project['unread'] != 0 %}
+               ({{ project['unread'] }})
+               {% endif %}
+               </a></li>
+               <li><a href="{{ url_for('project_posts',project_id=project['project_id']) }}">All Posts</a></li>
+               <li><a href="{{ url_for('project_settings',project_id=project['project_id']) }}">Settings</a></li>
+            </ul>
          </div>
-         <br><br>
-         <section class="chatbox">
-            <textarea id="chat" cols="70" rows="10" placeholder="No messages yet. Start one..."></textarea><br /><br />
-            <div class="main-chat">
-               <input type="text" id='user-input' placeholder='Chat here...'>
-               <button type="button" id="send">SEND</button>
+         <div class="divider" style="margin-bottom:20px;margin-top:30px;"></div>
+         <div class="chat-wrapper">
+            <div class="message-wrapper">
+               <div class="messager" id="messager">
+                  <div class="message_holder">
+                     {% for i in range(all_chats|length) %}
+                     {% if i == 0 or all_chats[i]['timestamp'][0] != all_chats[i-1]['timestamp'][0] or all_chats[i]['timestamp'][1] != all_chats[i-1]['timestamp'][1] or all_chats[i]['timestamp'][2] != all_chats[i-1]['timestamp'][2]: %}
+                     <p class="time-label"><span>{{ all_chats[i]['timestamp'][0] }} {{ all_chats[i]['timestamp'][1] }}, {{ all_chats[i]['timestamp'][2] }}</span></p>
+                     {% endif %}
+                     {% if session.name in all_chats[i]['username'] %}
+                     <div class="text right">
+                        <div class="timestamp" style="visibility:hidden;display:inline;" id="stp-{{ all_chats[i]['timestamp'][0] }}{{ all_chats[i]['timestamp'][1] }}{{ all_chats[i]['timestamp'][2] }}{{ all_chats[i]['timestamp'][3] }}{{ all_chats[i]['timestamp'][4] }}{{ all_chats[i]['timestamp'][5] }}">{{ all_chats[i]['timestamp'][3] }}:{{ all_chats[i]['timestamp'][4] }}</div>
+                        <div class="msg" onmouseover="showTimestamp(event)" onmouseout="hideTimestamp(event)" id="msg-{{ all_chats[i]['timestamp'][0] }}{{ all_chats[i]['timestamp'][1] }}{{ all_chats[i]['timestamp'][2] }}{{ all_chats[i]['timestamp'][3] }}{{ all_chats[i]['timestamp'][4] }}{{ all_chats[i]['timestamp'][5] }}">{{ all_chats[i]['msg'] }}</div>
+                     </div>
+                     {% else %}
+                     <div class="text left">
+                        <div class="sender">{{ all_chats[i]['username'] }}</div>
+                        <div class="msg" onmouseover="showTimestamp(event)" onmouseout="hideTimestamp(event)" id="msg-{{ all_chats[i]['timestamp'][0] }}{{ all_chats[i]['timestamp'][1] }}{{ all_chats[i]['timestamp'][2] }}{{ all_chats[i]['timestamp'][3] }}{{ all_chats[i]['timestamp'][4] }}{{ all_chats[i]['timestamp'][5] }}">{{ all_chats[i]['msg'] }}</div>
+                        <div class="timestamp" style="visibility:hidden;display:inline;" id="stp-{{ all_chats[i]['timestamp'][0] }}{{ all_chats[i]['timestamp'][1] }}{{ all_chats[i]['timestamp'][2] }}{{ all_chats[i]['timestamp'][3] }}{{ all_chats[i]['timestamp'][4] }}{{ all_chats[i]['timestamp'][5] }}">{{ all_chats[i]['timestamp'][3] }}:{{ all_chats[i]['timestamp'][4] }}</div>
+                     </div>
+                     {% endif %}
+                     {% endfor %}
+                  </div>
+               </div>
+               <form class="inputbox" name="chatter" method="POST" action="" onsubmit="return false">
+                  <input name="msg" type="text" class="message" placeholder="Send a message..."/>
+                  <button id="submit" type="submit"><i class="fa-solid fa-message"></i></button>
+               </form>
             </div>
-            <div class="sidebar">
-               <br><br><br>
-               <h3 class="subtitle">Members</h3>
-               <ul>
-                {% for username in project['usernames'].split(' ') %}
-                    <li>{{ username }}</li>
-                {% endfor %}
+            <div class="activity-wrapper">
+               <h3>Active</h3>
+               <ul id="active">
+               </ul>
+               <h3>Offline</h3>
+               <ul id="offline">
                </ul>
             </div>
-         </section>
+         </div>
+         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+         <script>
+            function validateForm() {
+               let form = document.forms["chatter"];
+               //alert(form['msg'].value);
+               if (form['msg'].value.replaceAll(' ', '') == '') {
+                  return false;
+               } else if (form['msg'].value.length > 800) {
+                  alert("Your chat cannot be above 800 words.");
+                  return false;
+               }
+            }
+         </script>
+         <script type="text/javascript">
+            function updateScroll(){
+               var element = document.getElementById("messager");
+               element.scrollTop = element.scrollHeight;
+            }
+
+            updateScroll();
+            let msg_sent_today_flag = false;
+
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+         
+            socket.on( 'connect', function() {
+               socket.emit('join', {{ project['project_id'] }});
+               socket.emit( 'my event', {
+                  data: 'User Connected'
+               });
+               let all_members = {{ project['usernames']|safe }};
+               let original_offline_out = '';
+               for (let i = 0; i < all_members.length; i++) {
+                  if (all_members[i] != '{{ session.name }}') {
+                     original_offline_out += '<li>' + all_members[i] + '</li>';
+                  }
+               }
+               $('#active').html('<li>{{ session.name }}</li>');
+               $('#offline').html(original_offline_out);
+               setInterval(function() {
+                  socket.emit('update', {{ project['project_id'] }});
+                  $.get('/get-activity/{{ project['project_id'] }}', function(data) {
+                     let replace_data = data.replace('{{ session.name }} ', '');
+                     let arr_data = replace_data.split(' ');
+                     let active_out = '<li>{{ session.name }}</li>';
+                     for (let i = 0; i < arr_data.length - 1; i++) {
+                        active_out += '<li>' + arr_data[i] + '</li>';
+                     }
+                     let all_members = {{ project['usernames']|safe }};
+                     let offline_out = '';
+                     for (let i = 0; i < all_members.length; i++) {
+                        if ((!active_out.includes(all_members[i])) && (all_members[i] != '{{ session.name }}')) {
+                           offline_out += '<li>' + all_members[i] + '</li>';
+                        }
+                     }
+                     $('#active').html(active_out);
+                     $('#offline').html(offline_out);
+                  });
+               }, 5000)
+               var form = $( 'form' ).on( 'submit', function( e ) {
+                  e.preventDefault();
+                  let project_id = {{ project['project_id'] }};
+                  let username = "{{ session.name }}";
+                  let user_input = $( 'input.message' ).val();
+                  if (user_input.replaceAll(' ', '') == '') {
+                     return;
+                  } else if (user_input.length > 800) {
+                     alert("Your chat cannot be above 800 words.");
+                     return;
+                  }
+                  socket.emit( 'my event', {
+                     project_id : project_id,
+                     username : username,
+                     message : user_input
+                  });
+                  $( 'input.message' ).val( '' ).focus();
+               });
+            })
+            $(window).unload(function() {
+               socket.emit('join', {{ project['project_id'] }});
+            });
+            socket.on( 'my response', function( msg ) {
+               console.log( msg )
+               if( typeof msg.username !== 'undefined' ) {
+                  const date = new Date();
+                  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+                  {% if all_chats|length != 0: %}
+                  if (!((date.getFullYear() == {{ all_chats[all_chats|length - 1]['timestamp'][2] }})
+                     && (months[date.getMonth()] == "{{ all_chats[all_chats|length - 1]['timestamp'][0] }}")
+                     && (date.getDate() == {{ all_chats[all_chats|length - 1]['timestamp'][1] }}))
+                     && !msg_sent_today_flag) {
+                     msg_sent_today_flag = true;
+                     $( 'div.message_holder ').append( '<p class="time-label"><span>'+months[date.getMonth()]+' '+date.getDate()+', '+date.getFullYear()+'</span></p>' );
+                  }
+                  {% else %}
+                  if (!msg_sent_today_flag) {
+                     msg_sent_today_flag = true;
+                     $( 'div.message_holder ').append( '<p class="time-label"><span>'+months[date.getMonth()]+' '+date.getDate()+', '+date.getFullYear()+'</span></p>' );
+                  }
+                  {% endif %}
+                  else if (!msg_sent_today_flag) {
+                     msg_sent_today_flag = true;
+                     $( 'div.message_holder ').append( '<p class="time-label new"><span>New</span></p>' );
+                  }
+                  if (msg.username == '{{ session.name }}') {
+                     $( 'div.message_holder' ).append( '<div class="text right"><div class="msg">'+msg.message+'</div></div>' );
+                  } else {
+                     $( 'div.message_holder' ).append( '<div class="text left"><div class="sender">'+msg.username+'</div><div class="msg">'+msg.message+'</div></div>' );
+                  }
+                  updateScroll();
+               }
+            })
+         </script>
       </div>
       <br><br><br>
       {% endblock %}

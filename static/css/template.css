@@ -3,11 +3,18 @@ body {
     padding: 0px;
     font-family: 'Heebo', sans-serif;
     color: #444;
-    }
-html,body{
-    height: 100%
+    background-color: #ffffff;
+    /*background-image: url('https://img.freepik.com/premium-vector/polka-dot-seamless-pattern-halftone-background-seamless-monochrome-dotted-texture-simple-minimal-pattern-vector-illustration-white-background_192280-1095.jpg?w=360');
+    background-repeat: repeat;*/
 }
-#holder{
+html,body {
+    height: 100%;
+    font-weight: 400;
+}
+body * {
+    font-weight: 400;
+}
+#holder {
     min-height: 100%;
     position: relative;
 }
@@ -15,7 +22,7 @@ html,body{
     padding-bottom: 100px;
 }
 header {
-    background-color: #b0b0ff;
+    background-image: linear-gradient(to right, #6b006b, #1a006b);
     height: 35px;
     width: 100%;
     padding-top: 10px;
@@ -26,7 +33,7 @@ header {
 header h1.logo {
     margin: 0;
     font-size: 1.7em;
-    color: #000;
+    color: #fff;
     float: left;
     }
 footer {
@@ -42,9 +49,14 @@ footer {
     bottom: 0;
 }
 .container {
-    width: 1200px;
+    width: 90%;
     margin: 0 auto;
     }
+.main-content {
+    width: 100%;
+    margin: 0px auto;
+    overflow: auto;
+}
 .content {
     width: 70%;
     margin: 0px auto;
@@ -64,6 +76,61 @@ footer {
     cursor: pointer;
     transition: 0.3s;
     box-shadow: 5px 5px 5px #888;
+}
+.postbtn {
+    font-size: 40px;
+    background-image: linear-gradient(to right, #6b006b, #1a006b);
+    border-radius: 100px;
+    color: white;
+    padding: 10px;
+    width: 100px;
+    height: 100px;
+    box-shadow: 2px 2px 2px rgb(187, 187, 187);
+    border: 2px solid white;
+}
+.postbtn:hover {
+    background-image: linear-gradient(to right, white, white);
+    color: #6b006b;
+    border: 2px solid black;
+    transition: 0.3s;
+    cursor: pointer;
+}
+.featurediv {
+    border-radius: 25px;
+    padding: 20px;
+    margin: 0px auto;
+    background-image: linear-gradient(to right, #6b006b, #1a006b);
+    color: white;
+    width: 410px;
+    height: 100px;
+}
+.featurebtn {
+    font-size: 40px;
+    background-image: linear-gradient(to right, #c58916, #e6ac00);
+    border-radius: 100px;
+    color: white;
+    padding: 10px;
+    width: 100px;
+    height: 100px;
+    box-shadow: 2px 2px 2px rgb(187, 187, 187);
+    border: 2px solid white;
+    float: left;
+}
+.featurebtn:hover {
+    background-image: linear-gradient(to right, white, white);
+    color: #e6ac00;
+    border: 2px solid black;
+    transition: 0.3s;
+    cursor: pointer;
+    box-shadow: 0px 0px 0px white;
+}
+.notif {
+    background-color: red;
+    border-radius: 100px;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-left: 5px;
+    color: white;
 }
 div.home {
     padding: 10px 0 30px 0;
@@ -98,6 +165,7 @@ h3 {
 .menu {
     float: right;
     margin-top: 8px;
+    margin-right: 0px;
 }
 .menu li {
     display: inline;
@@ -106,7 +174,7 @@ h3 {
     margin-left: 35px;
 }
 .menu li a {
-    color: #444;
+    color: white;
     text-decoration: none;
 }
 #sub-nav {
@@ -123,14 +191,56 @@ h3 {
     margin-right: 20px;
 }
 .sub-menu li a {
-    color: #00594a;
-    text-decoration: underline;
+    color: #313131;
+    text-decoration: none;
     padding: 8px;
     border-radius: 5px;
     font-size: 20px;
 }
+.sub-menu li a:hover {
+    background-color: #1a006b;
+    color: white;
+    transition: 0.3s;
+}
 .highlight {
     background-color: #1a006b;
+}
+.sidebar {
+    position: fixed;
+    left: 0px;
+    top: 55px;
+    width: 293px;
+    height: calc(100% - 160px);
+    /*background-image: linear-gradient(to right, rgb(181, 193, 255), 60%, white);*/
+    background-color: rgb(181, 193, 255);
+    padding-left: 20px;
+    padding-top: 10px;
+    padding-bottom: 160px;
+    overflow-y: scroll;
+}
+.sidebar h3 {
+    font-size: 18px;
+    color: black;
+    margin-bottom: 10px;
+    margin-top: 10px;
+    text-align: left;
+}
+.sidebar p {
+    color: #444;
+    margin-right: 15px;
+}
+.sidebar .proj-link {
+    text-decoration: none;
+    margin-bottom: -10px;
+    padding: 10px;
+    border-radius: 25px;
+    background-color: rgb(0, 24, 133);
+    color: white;
+}
+.sidebar .proj-link:hover {
+    background-color: white;
+    color: rgb(0, 24, 133);
+    transition: 0.3s;
 }
 .feed {
     margin: 0px auto;
@@ -141,9 +251,11 @@ h3 {
     width: 100%;
     margin-top: 15px;
     border: 3px solid #1a006b;
-    border-radius: 0px 10px 0px 10px;
-    background-color: #e8ecff;
+    /*border-radius: 0px 10px 0px 10px;*/
+    background-color: #ededed;
     /*box-shadow: 5px 5px 5px #333;*/
+    margin-bottom: 30px;
+    display: flex;
 }
 .post * {
     margin-left: 30px;
@@ -152,32 +264,149 @@ h3 {
     margin-top: 0px;
     color: black;
 }
-.post:hover {
+.post a:hover {
     background-color: #1a006b;
     cursor: pointer;
     transition: 0.3s;
     /*box-shadow: 5px 5px 5px #888;*/
 }
-.post:hover * {
+.post a:hover * {
     color: white;
     cursor: pointer;
     transition: 0.3s;
 }
+.post a:hover .tag {
+    border-color: white;
+}
 .post .title {
     padding-top: 15px;
-    font-size: 20px;
+    margin-bottom: 10px;
+    font-size: 25px;
 }
 .post .desc {
     font-size: 14px;
 }
-.post .author {
-    font-size: 10px;
-    text-align: right;
-    color: #666;
-    padding-bottom: 15px;
+.post .top {
+    padding-top: 15px;
+    font-size: 16px;
 }
-.post .tags {
+.post .author {
+    margin-left: 0px;
+    margin-right: 0px;
+    color: rgb(0, 24, 133);
+}
+.post .tag {
     font-size: 10px;
     color: #666;
-    padding-bottom: 0px;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 25px;
+    display: inline;
+}
+.post .timestamp {
+    display: inline;
+    float: right;
+    color: #666;
+    font-size: 13px;
+}
+.post .over {
+    margin: 0px;
+    width: calc(100% - 60px);
+    float: left;
+}
+.post-text {
+    margin: 0px;
+}
+.post-icons {
+    margin: 0px;
+    width: 60px;
+    background-color: #313131;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-left: 3px solid black;
+}
+.clicked {
+    background-color: white;
+    color: black;
+}
+.post-icons * {
+    align-self: stretch;
+    color: white;
+    height: 25%;
+    min-height: 50px;
+    width: 60px;
+    margin: 0px;
+    position: relative;
+}
+.post-icons .likes, .post-icons .comments, .post-icons .share {
+    border-bottom: 1px solid white;
+}
+.icon-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+}
+.fa-solid {
+    margin-bottom: -35px;
+    margin-top: 5px;
+}
+.likes:hover, .comments:hover, .share:hover, .save:hover {
+    background-color: white;
+    color: black;
+    cursor: pointer;
+    transition: 0.3s;
+}
+:root {
+    --color_from_hover: #313131;
+}
+.likes:hover span {
+    color: var(--color_from_hover);
+}
+.comments:hover span {
+    color: var(--color_from_hover);
+}
+.share:hover span {
+    color: var(--color_from_hover);
+}
+.save:hover span {
+    color: var(--color_from_hover);
+}
+.likes:hover .fa-up-long {
+    color: var(--color_from_hover);
+}
+.comments:hover .fa-comment {
+    color: var(--color_from_hover);
+}
+.share:hover .fa-share {
+    color: var(--color_from_hover);
+}
+.save:hover .fa-bookmark {
+    color: var(--color_from_hover);
+}
+.proj-content {
+    width: calc(100% - 400px);
+    float: right;
+    overflow: auto;
+    margin-right: 30px;
+}
+.user {
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    color: rgb(0, 24, 133);
+    font-weight: 700;
+}
+.user:hover {
+    text-decoration-color: rgb(63, 99, 255);
+    color: rgb(63, 99, 255);
+    transition: 0.3s;
+}
+.divider {
+   background-color: black;
+   width: 100%;
+   height: 2px;
+   overflow: auto;
 }

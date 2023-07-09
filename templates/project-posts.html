@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>{{ project['title'] }}</title>
+      <style>
+
+.bubble {
+   width: 100%;
+   margin: 0px auto;
+   display: block;
+   min-height: 250px;
+}
+.left {
+   float: left;
+}
+.right {
+   float: right;
+}
+#title {
+   padding-top: 50px;
+}
+.subtitle {
+   text-align: left;
+}
+#createbtn {
+    font-size: 50px;
+    width: 60px;
+    height: 60px;
+    color: #fff;
+    background: linear-gradient(to right, #bd00d6, #e7007fcc);
+    border-radius: 100%;
+    border: 1px solid black;
+    margin-top: -30px;
+    /*box-shadow: 4px 4px 4px #444;*/
+}
+#createbtn:hover {
+    color: #bd00d6;
+    background: #fff;
+    border: 1px solid #e7007fcc;
+    /*box-shadow: 2px 2px 2px #e7007fcc;*/
+    transition: 0.3s;
+    cursor: pointer;
+}
+#post_update, #important_links, #updates {
+   border: 1px solid gray;
+   border-radius: 10px;
+   padding-left: 20px;
+   padding-right: 20px;
+}
+#post_update {
+    float: left;
+    width: 30%;
+    height: 150px;
+}
+#important_links {
+    margin-top: 20px;
+    float: left;
+    width: 30%;
+    height: 400px;
+}
+#updates {
+    float: right;
+    width: 60%;
+    height: 800px;
+}
+
+      </style>
+   <script>
+      function like(event) {
+         var ID = event.currentTarget.id;
+         var chosenElement = document.getElementById(ID);
+         if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+            var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+            document.getElementById("likes-" + ID.substring(8)).textContent = likes + 1;
+            chosenElement.style.backgroundColor = "white";
+            document.getElementById("i-" + ID.substring(8)).style.color = "#313131";
+            document.getElementById("likes-" + ID.substring(8)).style.color = "#313131";
+            data = {
+            'action': 'like',
+            'post_id': ID.substring(8)};
+         } else {
+            var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+            document.getElementById("likes-" + ID.substring(8)).textContent = likes - 1;
+            chosenElement.style.backgroundColor = "#313131";
+            document.getElementById("i-" + ID.substring(8)).style.color = "white";
+            document.getElementById("likes-" + ID.substring(8)).style.color = "white";
+            data = {
+            'action': 'unlike',
+            'post_id': ID.substring(8)};
+         }
+         httpGetAsyncPost(window.location.href, action_stored, data);
+      }
+
+      function save(event) {
+         var ID = event.currentTarget.id;
+         var chosenElement = document.getElementById(ID);
+         if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+            {% if session.name %}
+            document.getElementById("saves-" + ID.substring(8)).textContent = "Saved";
+            {% endif %}
+            chosenElement.style.backgroundColor = "white";
+            document.getElementById("si-" + ID.substring(8)).style.color = "#313131";
+            document.getElementById("saves-" + ID.substring(8)).style.color = "#313131";
+            data = {
+            'action': 'save',
+            'post_id': ID.substring(8)};
+         } else {
+            {% if session.name %}
+            document.getElementById("saves-" + ID.substring(8)).textContent = "Save";
+            {% endif %}
+            chosenElement.style.backgroundColor = "#313131";
+            document.getElementById("si-" + ID.substring(8)).style.color = "white";
+            document.getElementById("saves-" + ID.substring(8)).style.color = "white";
+            data = {
+            'action': 'unsave',
+            'post_id': ID.substring(8)};
+         }
+         httpGetAsyncPost(window.location.href, action_stored, data);
+      }
+      
+      function action_stored(data) {
+         data = JSON.parse(data);
+         if (data['state'] != 'success') {
+            alert('Error: ' + data['state']);
+         }
+      }
+
+      function httpGetAsyncPost(theUrl, callback, data){
+         //alert(JSON.stringify(data));
+         var xmlHttp = new XMLHttpRequest();
+         xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+               callback(xmlHttp.responseText);
+            }
+         }
+         xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+         //alert('c');
+         xmlHttp.send(JSON.stringify(data));
+         //alert('d');
+      }
+   </script>
+   </head>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" style="width:90%">
+         <br>
+         <h2 id="title">{{ project['title'] }}</h2>
+         <div id="sub-nav">
+            <ul class="sub-menu">
+               <li><a href="{{ url_for('project',project_id=project['project_id']) }}">Feed</a></li>
+               <li><a href="{{ url_for('project_application',project_id=project['project_id']) }}">Applications</a></li>
+               <li><a href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat
+                  {% if project['unread'] != 0 %}
+                   ({{ project['unread'] }})
+                  {% endif %}
+                  </a></li>
+               <li><a style="color:#fff;" class="highlight" href="{{ url_for('project_posts',project_id=project['project_id']) }}">All Posts</a></li>
+               <li><a href="{{ url_for('project_settings',project_id=project['project_id']) }}">Settings</a></li>
+            </ul>
+         </div>
+         <div class="divider" style="margin-bottom:20px;margin-top:30px;"></div>
+         <div class="feed">
+            {% if len > 0: %}
+            {% for post in project_posts %}
+            <div class="post">
+               <a class="over" style="text-decoration:none;" href="{{ url_for('post',post_id=post['post_id']) }}">
+                  <div class="post-text">
+                     <p class="top">Posted by: <span class="author">{{ post['username'] }}</span>
+                        {% if post['music_genre'] != 'default' and post['help_needed'] != 'default' %}
+                         to #{{ post['music_genre'] }} and #{{ post['help_needed'] }}
+                        {% elif post['help_needed'] != 'default' %}
+                         to #{{ post['help_needed'] }}
+                        {% elif post['music_genre'] != 'default' %}
+                         to #{{ post['music_genre'] }}
+                        {% endif %}
+                     </p>
+                     {% if post['project_id'] != 0 %}
+                     <span class="tag" style="background-color:#1a006b;color:white;">Project Open</span><br>
+                     {% endif %}
+                     <p class="title">{{ post['title'] }}</h3>
+                     {% for para in post['post'] %}
+                     {% if para == "": %}
+                     <p class="desc"><br></p>
+                     {% else %}
+                     <p class="desc">{{ para }}</p>
+                     {% endif %}
+                     {% endfor %}
+                     <br>
+                     {% if post['img'] == 1 %}
+                     <span class="tag">Image</span>
+                     {% endif %}
+                     {% if post['audio'] == 1 %}
+                     <span class="tag">Audio</span>
+                     {% endif %}
+                     {% if post['video'] == 1 %}
+                     <span class="tag">Video</span>
+                     {% endif %}
+                     <span class="timestamp">{{ post['timestamp'][0] }} {{ post['timestamp'][1] }}, {{ post['timestamp'][2] }} {{ post['timestamp'][3] }}:{{ post['timestamp'][4] }}</span>
+                     <br><br>
+                  </div>
+               </a>
+               <div class="post-icons">
+                  {% if session.name and session.name != "" and post['post_id']|string in user['posts_liked'] %}
+                  <div id="likebox-{{ post['post_id'] }}" class="likes clicked" name="clicked" onclick="like(event)">
+                     <div class="icon-box">
+                        <span><i id="i-{{ post['post_id'] }}" style="color: #313131" class="fa-solid fa-up-long"></i></span><br>
+                        <span style="color: #313131" id="likes-{{ post['post_id'] }}" style="font-size:18px">{{ post['likes'] }}</span>
+                     </div>
+                  </div>
+                  {% else %}
+                  <div id="likebox-{{ post['post_id'] }}" class="likes" onclick="like(event)">
+                     <div class="icon-box">
+                        <span><i id="i-{{ post['post_id'] }}" class="fa-solid fa-up-long"></i></span><br>
+                        <span id="likes-{{ post['post_id'] }}" style="font-size:18px">{{ post['likes'] }}</span>
+                     </div>
+                  </div>
+                  {% endif %}
+                  <div class="comments" onclick="window.location.href='/post/{{ post['post_id'] }}';">
+                     <div class="icon-box">
+                        <span><i class="fa-solid fa-comment"></i></span><br>
+                        <span id="comments-{{ post['post_id'] }}" style="font-size:18px">{{ post['comments'] }}</span>
+                     </div>
+                  </div>
+                  <div class="share" onclick="
+                     var shareText = '127.0.0.1:1601{{ url_for('post',post_id=post['post_id']) }}';
+                     navigator.clipboard.writeText(shareText);
+                     document.getElementById('share-{{ post['post_id'] }}').textContent = 'Copied!';
+                     setTimeout(function () {
+                        document.getElementById('share-{{ post['post_id'] }}').textContent = 'Share';
+                     }, 5000);
+                  ">
+                     <div class="icon-box">
+                        <span><i class="fa-solid fa-share"></i></span><br>
+                        <span id="share-{{ post['post_id'] }}" style="font-size:12px">Share</span>
+                     </div>
+                  </div>
+                  {% if session.name and session.name != "" and post['post_id']|string in user['saved'] %}
+                  <div id="savebox-{{ post['post_id'] }}" class="save clicked" name="clicked" onclick="save(event)">
+                     <div class="icon-box">
+                        <span><i id="si-{{ post['post_id'] }}" style="color: #313131" class="fa-solid fa-bookmark"></i></span><br>
+                        <span style="color: #313131;font-size:12px" id="saves-{{ post['post_id'] }}">Saved</span>
+                     </div>
+                  </div>
+                  {% else %}
+                  <div id="savebox-{{ post['post_id'] }}" class="save" onclick="save(event)">
+                     <div class="icon-box">
+                        <span><i id="si-{{ post['post_id'] }}" class="fa-solid fa-bookmark"></i></span><br>
+                        <span id="saves-{{ post['post_id'] }}" style="font-size:12px">Save</span>
+                     </div>
+                  </div>
+                  {% endif %}
+               </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p>No posts yet. Click <a href="{{ url_for('create_post') }}">here</a> to make your first post!</p>
+            {% endif %}
+         </div>
+      </div>
+      <br><br><br>
+      {% endblock %}
+   </body>
+</html>

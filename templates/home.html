@@ -37,54 +37,30 @@
          height: 2px;
          overflow: auto;
       }
-      .sidebar {
-         position: fixed;
-         left: 0px;
-         top: 55px;
-         width: 293px;
-         height: calc(100% - 160px);
-         background-color: rgb(218, 218, 218);
-         padding-left: 20px;
-         padding-top: 10px;
-         padding-bottom: 160px;
-         overflow-y: scroll;
-      }
-      .sidebar h3 {
-         font-size: 18px;
-         color: black;
-         margin-bottom: 10px;
-         margin-top: 10px;
-         text-align: left;
-      }
-      .sidebar p {
-         color: #444;
-         margin-right: 15px;
-      }
       .forums {
          padding-top: 30px;
-         width: calc(100% - 530px);
-         margin-right: 230px;
+         width: calc(100% - 450px);
+         margin-right: 150px;
          height: 100%;
          float: right;
       }
       .advanced-search {
-         position: absolute;
+         position: fixed;
          top: 65px;
-         right: 25px;
-         background-color: rgb(218, 218, 218);
-         width: 200px;
-         height: calc(100% - 160px);
-         max-height: 600px;
+         right: 15px;
+         /*background-color: rgb(181, 193, 255);*/
+         background-color: transparent;
+         width: min(270px, 18.5%);
+         /*height: calc(100% - 160px);
+         max-height: 600px;*/
+         /*height: 75%;*/
+         height: min(800px, 85%);
          border-radius: 0;
          overflow-y: scroll;
+         border-radius: 15px;
       }
       .advanced-search p {
          margin: 20px;
-      }
-      .main-content {
-         width: 100%;
-         margin: 0px auto;
-         overflow: auto;
       }
       ::-webkit-scrollbar {
         -webkit-appearance: none;
@@ -102,14 +78,13 @@
       }
       .searchTerm {
         width: 100%;
-        border: 3px solid #1b14e5;
+        border: 3px solid #200087;
         border-right: none;
         padding: 5px;
         height: 20px;
         border-radius: 5px 0 0 5px;
         outline: none;
         color: black;
-        font-family: 'Poppins', sans-serif;
       }
       .searchTerm:focus{
         color: #1b14e5;
@@ -117,14 +92,15 @@
       .searchButton {
         width: 40px;
         height: 36px;
-        border: 1px solid #1b14e5;
-        background: #1b14e5;
+        border: 1px solid #200087;
+        background: #220092;
         text-align: center;
         color: #fff;
         border-radius: 0 5px 5px 0;
         cursor: pointer;
         font-size: 20px;
       }
+      
       
    </style>
    <script>
@@ -171,44 +147,74 @@
 
       function search() {
          var query = document.getElementById("search-query").value;
+         if (query.replaceAll(" ", "") == "") {
+            return;
+         }
          window.location.href = "/search/" + query;
       }
 
-      function reply(event) {
-         var reply_id;
-         if (event.target.getAttribute('name') == 'comment-on-original') {
-            reply_id = '0';
-         } else {
-            reply_id = event.target.getAttribute('name');
-         }
-         var textboxID = 'textbox-' + event.target.getAttribute('name');
-         data = {
-            'action': 'comment',
-            'reply_id': reply_id,
-            'comment': document.getElementById(textboxID).value};
-         httpGetAsyncPost(window.location.href, end_func, data);
-      }
-
       function like(event) {
-         data = {
+         var ID = event.currentTarget.id;
+         var chosenElement = document.getElementById(ID);
+         if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+            var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+            {% if session.name %}
+            document.getElementById("likes-" + ID.substring(8)).textContent = likes + 1;
+            {% endif %}
+            chosenElement.style.backgroundColor = "white";
+            document.getElementById("i-" + ID.substring(8)).style.color = "#313131";
+            document.getElementById("likes-" + ID.substring(8)).style.color = "#313131";
+            data = {
             'action': 'like',
-            'comment_id': event.target.getAttribute('name')};
-         httpGetAsyncPost(window.location.href, like_stored, data);
-      }
-
-      function end_func(data) {
-         data = JSON.parse(data);
-         if (data['state'] == 'success') {
-            window.location.reload();
+            'post_id': ID.substring(8)};
          } else {
-            alert('Error: ' + data['state']);
+            var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+            document.getElementById("likes-" + ID.substring(8)).textContent = likes - 1;
+            chosenElement.style.backgroundColor = "#313131";
+            document.getElementById("i-" + ID.substring(8)).style.color = "white";
+            document.getElementById("likes-" + ID.substring(8)).style.color = "white";
+            data = {
+            'action': 'unlike',
+            'post_id': ID.substring(8)};
          }
+         httpGetAsyncPost(window.location.href, action_stored, data);
       }
 
-      function like_stored(data) {
+      function save(event) {
+         var ID = event.currentTarget.id;
+         var chosenElement = document.getElementById(ID);
+         if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+            {% if session.name %}
+            document.getElementById("saves-" + ID.substring(8)).textContent = "Saved";
+            {% endif %}
+            chosenElement.style.backgroundColor = "white";
+            document.getElementById("si-" + ID.substring(8)).style.color = "#313131";
+            document.getElementById("saves-" + ID.substring(8)).style.color = "#313131";
+            data = {
+            'action': 'save',
+            'post_id': ID.substring(8)};
+         } else {
+            {% if session.name %}
+            document.getElementById("saves-" + ID.substring(8)).textContent = "Save";
+            {% endif %}
+            chosenElement.style.backgroundColor = "#313131";
+            document.getElementById("si-" + ID.substring(8)).style.color = "white";
+            document.getElementById("saves-" + ID.substring(8)).style.color = "white";
+            data = {
+            'action': 'unsave',
+            'post_id': ID.substring(8)};
+         }
+         httpGetAsyncPost(window.location.href, action_stored, data);
+      }
+
+      function action_stored(data) {
          data = JSON.parse(data);
          if (data['state'] != 'success') {
-            alert('Error: ' + data['state']);
+            if (data['state'] == 'redirect') {
+               window.location.href = 'sign-in';
+            } else {
+               alert('Error: ' + data['state']);
+            }
          }
       }
 
@@ -226,13 +232,6 @@
          //alert('d');
       }
 
-      function show_box(event) {
-         var promptLineID = 'prompt-line-' + event.target.getAttribute('name');
-         var commentLineID = 'comment-line-' + event.target.getAttribute('name');
-         document.getElementById(promptLineID).style.display = "none";
-         document.getElementById(commentLineID).style.display = "block";
-      }
-
    </script>
    <body>
       {% extends "template.html" %}
@@ -243,18 +242,23 @@
             {% if not session.name or session.name == "": %}
             <h3>You are not signed in. Sign in to make posts and start projects!</h3>
             {% else %}
-            <h3>WELCOME, {{ session.name }}.</h3>
-            <a href="{{ url_for('create_post') }}">MAKE A POST</a>
-            <a href="{{ url_for('logout') }}">Log out</a>
-            <h3>CURRENT PROJECTS</h3>
+            <h3>WELCOME, {{ session.name }}.</h3><br><br>
+            <h3>POST YOUR WORK</h3>
+            <a href="{{ url_for('create_post') }}">
+               <button class="postbtn"><i class="fa-solid fa-pen-to-square"></i></button>
+            </a><br><br><br>
+            <!--<a href="{{ url_for('logout') }}">Log out</a>-->
+            <h3>CURRENT PROJECTS</h3><br>
             {% if len_projects == 0: %}
             <p>You have no current projects. Make a post to start one!</p>
             {% else %}
-            <ol>
-            {% for project in Projects %}
-            <li><a href="{{ url_for('project',project_id=project['project_id']) }}">{{ project['title'] }}</a></li>
+            {% for i in range(Projects|length) %}
+            <a class="proj-link" href="{{ url_for('project',project_id=Projects[i]['project_id']) }}"><strong>{{ i + 1 }}.</strong> {{ Projects[i]['title'] }}
+            {% if Projects[i]['unread'] != 0 %}
+               <span class="notif">{{ Projects[i]['unread'] }}</span>
+            {% endif %}
+            </a><br><br>
             {% endfor %}
-            </ol>
             {% endif %}
             {% endif %}
          </div>
@@ -275,26 +279,95 @@
                <p>Searching for: {{ helplist_queuer }}</p>
                {% endif %}
                {% for post in Posts %}
-               <a style="text-decoration:none;" href="{{ url_for('post',post_id=post['post_id']) }}">
-                  <div class="post">
-                     <p class="title">{{ post['title'] }}</h3>
-                     {% for para in post['post'] %}
-                     {% if para == "": %}
-                     <p class="desc"><br></p>
+               <div class="post">
+                  <a class="over" style="text-decoration:none;" href="{{ url_for('post',post_id=post['post_id']) }}">
+                     <div class="post-text">
+                        <p class="top">Posted by: <span class="author">{{ post['username'] }}</span>
+                           {% if post['music_genre'] != 'default' and post['help_needed'] != 'default' %}
+                            to #{{ post['music_genre'] }} and #{{ post['help_needed'] }}
+                           {% elif post['help_needed'] != 'default' %}
+                            to #{{ post['help_needed'] }}
+                           {% elif post['music_genre'] != 'default' %}
+                            to #{{ post['music_genre'] }}
+                           {% endif %}
+                        </p>
+                        {% if post['project_id'] != 0 %}
+                        <span class="tag" style="background-color:#1a006b;color:white;">Project Open</span><br>
+                        {% endif %}
+                        <p class="title">{{ post['title'] }}</h3>
+                        {% for para in post['post'] %}
+                        {% if para == "": %}
+                        <p class="desc"><br></p>
+                        {% else %}
+                        <p class="desc">{{ para }}</p>
+                        {% endif %}
+                        {% endfor %}
+                        <br>
+                        {% if post['img'] == 1 %}
+                        <span class="tag">Image</span>
+                        {% endif %}
+                        {% if post['audio'] == 1 %}
+                        <span class="tag">Audio</span>
+                        {% endif %}
+                        {% if post['video'] == 1 %}
+                        <span class="tag">Video</span>
+                        {% endif %}
+                        <span class="timestamp">{{ post['timestamp'][0] }} {{ post['timestamp'][1] }}, {{ post['timestamp'][2] }} {{ post['timestamp'][3] }}:{{ post['timestamp'][4] }}</span>
+                        <br><br>
+                     </div>
+                  </a>
+                  <div class="post-icons">
+                     {% if session.name and session.name != "" and post['post_id']|string in user['posts_liked'] %}
+                     <div id="likebox-{{ post['post_id'] }}" class="likes clicked" name="clicked" onclick="like(event)">
+                        <div class="icon-box">
+                           <span><i id="i-{{ post['post_id'] }}" style="color: #313131" class="fa-solid fa-up-long"></i></span><br>
+                           <span style="color: #313131" id="likes-{{ post['post_id'] }}" style="font-size:18px">{{ post['likes'] }}</span>
+                        </div>
+                     </div>
                      {% else %}
-                     <p class="desc">{{ para }}</p>
+                     <div id="likebox-{{ post['post_id'] }}" class="likes" onclick="like(event)">
+                        <div class="icon-box">
+                           <span><i id="i-{{ post['post_id'] }}" class="fa-solid fa-up-long"></i></span><br>
+                           <span id="likes-{{ post['post_id'] }}" style="font-size:18px">{{ post['likes'] }}</span>
+                        </div>
+                     </div>
                      {% endif %}
-                     {% endfor %}
-                     {% if post['music_genre'] != 'default' and post['help_needed'] != 'default' %}
-                     <p class="tags">#{{ post['music_genre'] }} and #{{ post['help_needed'] }}</p>
-                     {% elif post['music_genre'] != 'default' %}
-                     <p class="tags">#{{ post['music_genre'] }}</p>
-                     {% elif post['help_needed'] != 'default' %}
-                     <p class="tags">#{{ post['help_needed'] }}</p>
+                     <div class="comments" onclick="window.location.href='post/{{ post['post_id'] }}';">
+                        <div class="icon-box">
+                           <span><i class="fa-solid fa-comment"></i></span><br>
+                           <span id="comments-{{ post['post_id'] }}" style="font-size:18px">{{ post['comments'] }}</span>
+                        </div>
+                     </div>
+                     <div class="share" onclick="
+                        var shareText = '127.0.0.1:1601{{ url_for('post',post_id=post['post_id']) }}';
+                        navigator.clipboard.writeText(shareText);
+                        document.getElementById('share-{{ post['post_id'] }}').textContent = 'Copied!';
+                        setTimeout(function () {
+                           document.getElementById('share-{{ post['post_id'] }}').textContent = 'Share';
+                        }, 5000);
+                     ">
+                        <div class="icon-box">
+                           <span><i class="fa-solid fa-share"></i></span><br>
+                           <span id="share-{{ post['post_id'] }}" style="font-size:12px">Share</span>
+                        </div>
+                     </div>
+                     {% if session.name and session.name != "" and post['post_id']|string in user['saved'] %}
+                     <div id="savebox-{{ post['post_id'] }}" class="save clicked" name="clicked" onclick="save(event)">
+                        <div class="icon-box">
+                           <span><i id="si-{{ post['post_id'] }}" style="color: #313131" class="fa-solid fa-bookmark"></i></span><br>
+                           <span style="color: #313131;font-size:12px" id="saves-{{ post['post_id'] }}">Saved</span>
+                        </div>
+                     </div>
+                     {% else %}
+                     <div id="savebox-{{ post['post_id'] }}" class="save" onclick="save(event)">
+                        <div class="icon-box">
+                           <span><i id="si-{{ post['post_id'] }}" class="fa-solid fa-bookmark"></i></span><br>
+                           <span id="saves-{{ post['post_id'] }}" style="font-size:12px">Save</span>
+                        </div>
+                     </div>
                      {% endif %}
-                     <p class="author">Posted by: {{ post['username'] }}</p>
                   </div>
-               </a>
+               </div>
                {% endfor %}
                <!--<div class="post">
                   <p class="title">Good lyrics for a country melody?</h3>
@@ -383,53 +456,57 @@
             </div>-->
          </div>
          <div class="advanced-search">
-            <p style="text-align:center">Music Category</p>
+            <h3 style="text-align:center">Music Category</h3>
             <p><input type="checkbox" id="pop"
                {% if genres_queuer and '#pop' in genres_queuer: %}
                checked
                {% endif %}
-               > Pop</p>
+               > <i class="fa-solid fa-fire"></i> Pop</p>
             <p><input type="checkbox" id="rock"
                {% if genres_queuer and '#rock' in genres_queuer: %}
                checked
                {% endif %}
-               > Rock</p>
+               > <i class="fa-solid fa-guitar"></i> Rock</p>
             <p><input type="checkbox" id="r&b"
                {% if genres_queuer and '#r&b' in genres_queuer: %}
                checked
                {% endif %}
-               > R&B</p>
+               > <i class="fa-solid fa-water"></i> R&B</p>
             <p><input type="checkbox" id="rap"
                {% if genres_queuer and '#rap' in genres_queuer: %}
                checked
                {% endif %}
-               > Rap</p>
-            <br>
-            <p style="text-align:center">And You Need...</p>
+               > <i class="fa-solid fa-headset"></i> Rap</p>
+            <h3 style="text-align:center">Looking For...</h3>
             <p><input type="checkbox" id="lyrics"
                {% if helplist_queuer and '#lyrics' in helplist_queuer: %}
                checked
                {% endif %}
-               > Lyrics Help</p>
+               > <i class="fa-solid fa-pen"></i> Lyrics</p>
             <p><input type="checkbox" id="melody"
                {% if helplist_queuer and '#melody' in helplist_queuer: %}
                checked
                {% endif %}
-               > Melody Help</p>
+               > <i class="fa-solid fa-music"></i> Melody</p>
             <p><input type="checkbox" id="chords"
                {% if helplist_queuer and '#chords' in helplist_queuer: %}
                checked
                {% endif %}
-               > Chords Help</p>
+               > <i class="fa-solid fa-circle-nodes"></i> Chords</p>
             <p><input type="checkbox" id="production"
                {% if helplist_queuer and '#production' in helplist_queuer: %}
                checked
                {% endif %}
-               > Production Help</p>
+               > <i class="fa-solid fa-wave-square"></i> Production</p>
             <br>
-            <button style="margin-left:20px;margin-bottom:20px;" class="bigbtn" onclick="advanced_search()">Search</button>
+            <button style="margin-left:20px;margin-bottom:20px;" class="bigbtn" onclick="advanced_search()"><i class="fa fa-search"></i></button>
          </div>
       </div>
+      <script>
+         {% if query %}
+         document.getElementById("search-query").value = '{{ query }}';
+         {% endif %}
+      </script>
       {% endblock %}
    </body>
 </html>

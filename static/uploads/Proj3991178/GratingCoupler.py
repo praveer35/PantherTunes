@@ -1,0 +1,1675 @@
+import gdspy
+import math
+import os
+
+################################################################
+# Title:    GratingCoupler.java                                #
+# Author:   Praveer Sharan                                     #
+# Version:  10/24/2022 (v1)                                    #
+# Description:                                                 #
+#   A class that contains functions for generating .txt files  #
+#   from .gds files with coordinates, generating .gds files    #
+#   from .txt files, and generating .gds files from specified  #
+#   measurements about the grating coupler.                    #
+################################################################
+
+class GratingCoupler:
+    # initializes the GratingCoupler class
+    def __init__(self, max_layer, max_datatype):
+        self.max_layer = max_layer
+        self.max_datatype = max_datatype
+        self.lib = gdspy.GdsLibrary()
+        self.cell = self.lib.new_cell('FIRST')
+    
+    # returns True if polygon is a rectangle, else returns False
+    def is_rectangle(self, pol):
+        x_coord_check = False
+        y_coord_check = False
+        if (round(pol[0][0], 3) == round(pol[1][0], 3)):
+            if (round(pol[2][0], 3) == round(pol[3][0], 3)):
+                x_coord_check = True
+        if (round(pol[0][0], 3) == round(pol[2][0], 3)):
+            if (round(pol[1][0], 3) == round(pol[3][0], 3)):
+                x_coord_check = True
+        if (round(pol[0][0], 3) == round(pol[3][0], 3)):
+            if (round(pol[1][0], 3) == round(pol[2][0], 3)):
+                x_coord_check = True
+        if (round(pol[0][1], 3) == round(pol[1][1], 3)):
+            if (round(pol[2][1], 3) == round(pol[3][1], 3)):
+                y_coord_check = True
+        if (round(pol[0][1], 3) == round(pol[2][1], 3)):
+            if (round(pol[1][1], 3) == round(pol[3][1], 3)):
+                y_coord_check = True
+        if (round(pol[0][1], 3) == round(pol[3][1], 3)):
+            if (round(pol[1][1], 3) == round(pol[2][1], 3)):
+                y_coord_check = True
+        return (x_coord_check and y_coord_check)
+
+    # returns a positive string of 3 decimal places from a decimal number
+    def d_to_str(self, decimal):
+        truncated_positive_decimal = round(decimal, 6)
+        return str(truncated_positive_decimal)
+    
+    # generates a .txt file containing the coordinates of a .gds file
+    def write_gds_to_txt(self, input_file, text_file, out=True):
+        gdsii = gdspy.GdsLibrary(infile=input_file)
+        coordFile = open(text_file, "w", -1)
+        coordFile.truncate(0)
+        main_cell = gdsii.top_level()[0]  # Assume a single top level cell
+        layer = self.max_layer
+        datatype = self.max_datatype
+        try:
+            pol_dict = main_cell.get_polygons(by_spec=True)
+            pol_list = pol_dict[(layer, datatype)]
+            for pol in pol_list:
+                coordFile.write("L:" + str(layer) + " D:" + str(datatype))
+                if (self.is_rectangle(pol)):
+                    coordFile.write(" RECT x:" + self.d_to_str(pol[0][0]) + " y:" + self.d_to_str(pol[0][1]))
+                    coordFile.write(" x:" + self.d_to_str(pol[2][0]) + " y:" + self.d_to_str(pol[2][1]) + "\n")
+                else:
+                    coordFile.write(" POLY")
+                    vertice = 0
+                    while vertice < len(pol):
+                        coordFile.write(" x:" + self.d_to_str(pol[vertice][0]) + " y:" + self.d_to_str(pol[vertice][1]))
+                        vertice += 1
+                    coordFile.write("\n")
+        except:
+            print("", end="")
+        if (out):
+            print("Success in func write_gds_to_txt:", input_file, "written to", text_file + ".")
+    
+    # generates a .gds file using the coordinates in a .txt file
+    def write_txt_to_gds(self, output_file, text_file, out=True):
+        coordFile = open(text_file, "r", -1)
+        lines = coordFile.readlines()
+        for line in lines:
+            data = line.strip().split(" ")
+            layer = int(data[0][2:])
+            datatype = int(data[1][2:])
+            if (data[2] == "RECT"):
+                rect = gdspy.Rectangle((float(data[3][2:]), float(data[4][2:])), (float(data[5][2:]), float(data[6][2:])), layer, datatype)
+                self.cell.add(rect)
+            elif (data[2] == "POLY"):
+                vertice = 0
+                pol_vertices = [(0, 0)] * int((len(data) - 3) / 2)
+                while vertice < (len(data) - 3) / 2:
+                    pol_vertices[vertice] = (float(data[vertice * 2 + 3][2:]), float(data[vertice * 2 + 4][2:]))
+                    vertice += 1
+                poly = gdspy.Polygon(pol_vertices, layer, datatype)
+                self.cell.add(poly)
+            else:
+                print("Error! Malfunction in file at line: " + line.strip())
+        self.lib.write_gds(output_file)
+        if (out):
+            print("Success in func write_txt_to_gds:", output_file, "generated by", text_file + ".")
+    
+    def equals(self, gds_file1, gds_file2):
+        txt_file1 = gds_file1[:len(gds_file1) - 3] + "txt"
+        txt_file2 = gds_file2[:len(gds_file2) - 3] + "txt"
+        self.write_gds_to_txt(gds_file1, txt_file1, False)
+        self.write_gds_to_txt(gds_file2, txt_file2, False)
+        file1 = open(txt_file1, "r", -1)
+        file2 = open(txt_file2, "r", -1)
+        file1_lines = file1.readlines()
+        file2_lines = file2.readlines()
+        files_match = True
+        shapes_match = True
+        for i in range(max(len(file1_lines), len(file2_lines))):
+            if (i >= len(file1_lines) or i >= len(file2_lines)):
+                files_match = False
+                shapes_match = False
+                break
+            if (file1_lines[i] != file2_lines[i]):
+                files_match = False
+                if ("RECT" in file1_lines[i] and "RECT" in file2_lines[i]):
+                    substr_index1 = file1_lines[i].index("RECT")
+                    substr_index2 = file2_lines[i].index("RECT")
+                    if (file1_lines[i][substr_index1:] != file2_lines[i][substr_index2:]):
+                        shapes_match = False
+                        break
+                elif ("POLY" in file1_lines[i] and "POLY" in file2_lines[i]):
+                    substr_index1 = file1_lines[i].index("POLY")
+                    substr_index2 = file2_lines[i].index("POLY")
+                    if (file1_lines[substr_index1:] != file2_lines[substr_index2:]):
+                        shapes_match = False
+                        break
+                else:
+                    shapes_match = False
+                    break
+        if (files_match):
+            print("Files match.")
+        elif (shapes_match):
+            print("Files do not match but they would disregarding layer/datatype.")
+        else:
+            print("Files do not match.")
+        os.remove(txt_file1)
+        os.remove(txt_file2)
+    
+    # generates a periodic .gds file mathematically through specified measurement
+    def write_gds(self, output_file, p, l_e, h, n, taper, w_wg, h_wg, out=True):
+        w = p - l_e
+        x = y = count = 0
+        while count < n:
+            tooth = gdspy.Rectangle((x, y), (x + w, y + h))
+            self.cell.add(tooth)
+            x += p
+            count += 1
+        h_tr = (h - h_wg) / 2
+        w_tr = h_tr/math.tan(taper * math.pi/180)
+        trapezoid = gdspy.Polygon([(x, y), (x + w_tr, y + h_tr), (x + w_tr, y + h_tr + h_wg), (x, y + h)])
+        self.cell.add(trapezoid)
+        x += w_tr
+        wave_guide = gdspy.Rectangle((x, y + h_tr), (x + w_wg, y + h_tr + h_wg))
+        self.cell.add(wave_guide)
+        x += w_wg
+        trapezoid = gdspy.Polygon([(x, y + h_tr), (x + w_tr, y), (x + w_tr, y + h), (x, y + h_tr + h_wg)])
+        self.cell.add(trapezoid)
+        x += w_tr + l_e
+        count = 0
+        while count < n:
+            tooth = gdspy.Rectangle((x, y), (x + w, y + h))
+            self.cell.add(tooth)
+            x += p
+            count += 1
+        self.lib.write_gds(output_file)
+        if (out):
+            print("Success in func write_gds:", output_file, "generated.")
+    
+    def do_job_1(self, input_text, output_text):
+        coordFile = open(input_text, "r", -1)
+        outFile = open(output_text, "w", -1)
+        lines = coordFile.readlines()
+        factor = 0
+        center_x = 7679.235
+        center_y = 1233.333
+        r_1 = 7.530948
+        r_2 = 7.146837
+        for line in lines:
+            data = line.strip().split(" ")
+            i = 0
+            print(len(data))
+            while i < len(data) - 1:
+                r_curr = (len(data) - i)/len(data) * r_1 + i/len(data) * r_2
+                factor = (r_curr - 0.7)/(r_curr - 2)
+                distance_to_center_x = float(data[i][2:]) - center_x
+                distance_to_center_y = float(data[i + 1][2:]) - center_y
+                new_x = center_x + factor * distance_to_center_x
+                new_y = center_y + factor * distance_to_center_y
+                outFile.write(" x:" + self.d_to_str(new_x) + " y:" + self.d_to_str(new_y))
+                i += 2
+    
+    def do_job_2(self, output_text):
+        outFile = open(output_text, "w", -1)
+        center_x = 7676.235
+        center_y = 1232.895
+        inner_radius = (1238.495 - 0.6 - 0.7) - 1232.895 + 0.48
+        width = 0.7
+        angle = 90
+        while angle <= 250:
+            distance_to_center_x = math.cos(math.radians(angle)) * inner_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * inner_radius
+            new_x = center_x + distance_to_center_x
+            new_y = center_y + distance_to_center_y
+            outFile.write(" x:" + self.d_to_str(new_x) + " y:" + self.d_to_str(new_y))
+            angle += 1.5
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (inner_radius + width)
+            distance_to_center_y = math.sin(math.radians(angle)) * (inner_radius + width)
+            new_x = center_x + distance_to_center_x
+            new_y = center_y + distance_to_center_y
+            outFile.write(" x:" + self.d_to_str(new_x) + " y:" + self.d_to_str(new_y))
+            angle -= 1.5
+    
+    def do_job_3(self, output_text):
+        mmi_width = 3
+        port_separation = mmi_width / 3
+        mmi_length = 12.75
+        taper_width = 0.7
+        taper_start = 0.38
+        taper_length = 3
+        x = 0
+        y = taper_length
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        self.lib.write_gds(output_text)
+    
+    def do_job_4(self, output_text):
+        mmi_width = 4
+        port_separation = mmi_width / 2
+        mmi_length = 71
+        taper_width = 1.8
+        taper_start = 0.38
+        taper_length = 10
+        x = 0
+        y = taper_length
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        self.lib.write_gds(output_text)
+    
+
+
+
+
+
+    
+    '''def do_job_6(self, output_text):
+        mmi_width = 4
+        port_separation = mmi_width / 2
+        mmi_length = 71
+        taper_width = 1.8
+        taper_start = 0.38
+        taper_length = 10
+        border_radius = 25
+        x = taper_length
+        y = 0
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        up_y = y + taper_start/2 + port_separation + border_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        down_y = up_y - 2 * border_radius - port_separation - taper_start
+        original_x = x
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += taper_length
+        up_y += border_radius - 2.81
+        y = up_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        up_y = y + taper_start/2 + port_separation + border_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += taper_length
+        up_y += border_radius - 2.81
+        y = up_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+
+        x = original_x
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 180
+        while angle <= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 270
+        while angle >= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += taper_length
+        down_y -= border_radius + 3.19
+        y = down_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        down_y = y - taper_start/2 - border_radius
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 180
+        while angle <= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 270
+        while angle >= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += taper_length
+        down_y -= border_radius + 3.19
+        y = down_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        
+
+        self.lib.write_gds(output_text)'''
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def do_job_5(self, output_text, mmi_length):
+        ld = {"layer": 171, "datatype": 0}
+        mmi_width = 3
+        port_separation = mmi_width / 3
+        taper_width = 0.7
+        taper_start = 0.38
+        taper_length = 3
+        border_radius = 25
+        term_radius = 4.81
+        x = taper_length
+        y = 0
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        up_y = y + taper_start/2 + port_separation + border_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        down_y = up_y - 2 * border_radius - port_separation - taper_start
+        original_x = x
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = up_y + border_radius - term_radius - 1.81 + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        # dim: 0.38 x 0.15 x 5.0
+        x += taper_length
+        up_y += border_radius - 1.81
+        y = up_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y - 5), (x + term_radius + 0.115, term_y - 5)]))
+        up_y = y + taper_start/2 + port_separation + border_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = up_y + border_radius - term_radius - 1.81 + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        x += taper_length
+        up_y += border_radius - 1.81
+        y = up_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y - 5), (x + term_radius + 0.115, term_y - 5)]))
+
+        x = original_x
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 180
+        while angle <= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 270
+        while angle >= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = down_y - border_radius - 2.19 - term_radius + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        x += taper_length
+        down_y -= border_radius + 2.19
+        y = down_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        term_y += term_radius - 0.81 + 2.19 + term_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y + 5), (x + term_radius + 0.115, term_y + 5)]))
+        down_y = y - taper_start/2 - border_radius
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 180
+        while angle <= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 270
+        while angle >= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = down_y - border_radius - 2.19 - term_radius + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        x += taper_length
+        down_y -= border_radius + 2.19
+        y = down_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        term_y += term_radius - 0.81 + 2.19 + term_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y + 5), (x + term_radius + 0.115, term_y + 5)]))
+        self.lib.write_gds(output_text)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def do_job_6(self, output_text, mmi_length):
+        ld = {"layer": 171, "datatype": 0}
+        mmi_width = 4
+        port_separation = mmi_width / 2
+        taper_width = 1.8
+        taper_start = 0.38
+        taper_length = 10
+        border_radius = 25
+        term_radius = 4.81
+        x = taper_length
+        y = 0
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        up_y = y + taper_start/2 + port_separation + border_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        down_y = up_y - 2 * border_radius - port_separation - taper_start
+        original_x = x
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = up_y + border_radius - term_radius - 2.81 + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        # dim: 0.38 x 0.15 x 5.0
+        x += taper_length
+        up_y += border_radius - 2.81
+        y = up_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y - 5), (x + term_radius + 0.115, term_y - 5)]))
+        up_y = y + taper_start/2 + port_separation + border_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = up_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = up_y + border_radius - term_radius - 2.81 + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        x += taper_length
+        up_y += border_radius - 2.81
+        y = up_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y - 5), (x + term_radius + 0.115, term_y - 5)]))
+
+        x = original_x
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 180
+        while angle <= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 270
+        while angle >= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = down_y - border_radius - 3.19 - term_radius + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        x += taper_length
+        down_y -= border_radius + 3.19
+        y = down_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        term_y += term_radius - 0.81 + 3.19 + term_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y + 5), (x + term_radius + 0.115, term_y + 5)]))
+        down_y = y - taper_start/2 - border_radius
+        circle = []
+        angle = 0
+        while angle <= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 90
+        while angle >= 0:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        x += border_radius * 2 + taper_start
+        circle = []
+        angle = 180
+        while angle <= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * border_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * border_radius
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 270
+        while angle >= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * (border_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (border_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = down_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        term_y = down_y - border_radius - 3.19 - term_radius + 0.81
+        circle = []
+        angle = 90
+        while angle <= 180:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 180
+        while angle >= 90:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x - term_radius, term_y), (x - term_radius - taper_start, term_y), (x - term_radius - taper_start + 0.115, term_y - 5), (x - term_radius - 0.115, term_y - 5)]))
+        x += taper_length
+        down_y -= border_radius + 3.19
+        y = down_y
+        rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+        self.cell.add(rectCENTER)
+        y += port_separation / 2
+        x -= taper_length
+        taperBL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperBL)
+        y += port_separation
+        taperTL = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x + taper_length, y - taper_width/2), (x + taper_length, y + taper_width/2)])
+        self.cell.add(taperTL)
+        x += taper_length * 2 + mmi_length
+        taperTR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperTR)
+        y -= port_separation
+        taperBR = gdspy.Polygon([(x, y + taper_start/2), (x, y - taper_start/2),
+            (x - taper_length, y - taper_width/2), (x - taper_length, y + taper_width/2)])
+        self.cell.add(taperBR)
+        term_y += term_radius - 0.81 + 3.19 + term_radius
+        circle = []
+        angle = 270
+        while angle <= 360:
+            distance_to_center_x = math.cos(math.radians(angle)) * term_radius
+            distance_to_center_y = math.sin(math.radians(angle)) * term_radius
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle += 1
+        angle = 360
+        while angle >= 270:
+            distance_to_center_x = math.cos(math.radians(angle)) * (term_radius + taper_start)
+            distance_to_center_y = math.sin(math.radians(angle)) * (term_radius + taper_start)
+            new_x = x + distance_to_center_x
+            new_y = term_y + distance_to_center_y
+            circle.append((new_x, new_y))
+            angle -= 1
+        self.cell.add(gdspy.Polygon(circle))
+        self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y + 5), (x + term_radius + 0.115, term_y + 5)]))
+        self.lib.write_gds(output_text)
+
+
+
+
+
+
+
+
+
+    def do_job_7(self, output_text):
+        mmi_length = 4
+        mmi_width = 2
+        taper_width = 0.7
+        taper_start = 0.38
+        taper_length = 3
+        border_radius = 25
+        term_radius = 4.81
+        x = taper_length
+        y = 0
+        d_to_in_left = 0.65
+        d_to_out_left = 0.81
+        d_to_in_right_bottom = 0.15
+        d_to_out_right_bottom = 0.31
+        d_to_in_right_top = 1.15
+        d_to_out_right_top = 1.31
+
+        def arc(x, y, angle1, angle2, radius):
+            circle = []
+            angle = angle1
+            while angle <= angle2:
+                distance_to_center_x = math.cos(math.radians(angle)) * radius
+                distance_to_center_y = math.sin(math.radians(angle)) * radius
+                new_x = x + distance_to_center_x
+                new_y = y + distance_to_center_y
+                circle.append((new_x, new_y))
+                angle += 1
+            angle = angle2
+            while angle >= angle1:
+                distance_to_center_x = math.cos(math.radians(angle)) * (radius + taper_start)
+                distance_to_center_y = math.sin(math.radians(angle)) * (radius + taper_start)
+                new_x = x + distance_to_center_x
+                new_y = y + distance_to_center_y
+                circle.append((new_x, new_y))
+                angle -= 1
+            self.cell.add(gdspy.Polygon(circle))
+        def mmi(x, y):
+            rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+            self.cell.add(rectCENTER)
+            x -= taper_length
+            taperL = gdspy.Polygon([(x, y + d_to_out_left + taper_start), (x, y + d_to_out_left),
+                (x + taper_length, y + d_to_in_left), (x + taper_length, y + d_to_in_left + taper_width)])
+            self.cell.add(taperL)
+            x += taper_length * 2 + mmi_length
+            taperTR = gdspy.Polygon([(x, y + d_to_out_right_top + taper_start), (x, y + d_to_out_right_top),
+                (x - taper_length, y + d_to_in_right_top), (x - taper_length, y + d_to_in_right_top + taper_width)])
+            self.cell.add(taperTR)
+            taperBR = gdspy.Polygon([(x, y + d_to_out_right_bottom + taper_start), (x, y + d_to_out_right_bottom),
+                (x - taper_length, y + d_to_in_right_bottom), (x - taper_length, y + d_to_in_right_bottom + taper_width)])
+            self.cell.add(taperBR)
+            return x
+        def term_up(x, y):
+            term_y = y + d_to_out_right_top + taper_start + term_radius
+            arc(x, term_y, 270, 360, term_radius)
+            self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y + 5), (x + term_radius + 0.115, term_y + 5)]))
+        def term_down(x, y):
+            term_y = y + d_to_out_right_bottom - term_radius
+            arc(x, term_y, 0, 90, term_radius)
+            self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y - 5), (x + term_radius + 0.115, term_y - 5)]))
+        x = mmi(x, y)
+        original_x = x
+        up_y = y + d_to_out_right_top + taper_start + border_radius
+        down_y = y + d_to_out_right_bottom - border_radius
+        arc(x, up_y, 270, 360, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, up_y, 90, 180, border_radius)
+        up_y += border_radius - d_to_out_left
+        x += taper_length
+        x = mmi(x, up_y)
+        term_down(x, up_y)
+        up_y += d_to_out_right_top + taper_start + border_radius
+        arc(x, up_y, 270, 360, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, up_y, 90, 180, border_radius)
+        up_y += border_radius - d_to_out_left
+        x += taper_length
+        x = mmi(x, up_y)
+        term_down(x, up_y)
+
+        x = original_x
+        arc(x, down_y, 0, 90, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, down_y, 180, 270, border_radius)
+        down_y -= border_radius + taper_start + d_to_out_left
+        x += taper_length
+        x = mmi(x, down_y)
+        term_up(x, down_y)
+        down_y += d_to_out_right_bottom - border_radius
+        arc(x, down_y, 0, 90, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, down_y, 180, 270, border_radius)
+        down_y -= border_radius + taper_start + d_to_out_left
+        x += taper_length
+        x = mmi(x, down_y)
+        term_up(x, down_y)
+
+        self.lib.write_gds(output_text)
+
+    def do_job_8(self, output_text):
+        mmi_length = 11.25
+        mmi_width = 4
+        taper_width = 1.5
+        taper_start = 0.7
+        taper_length = 3
+        border_radius = 100
+        term_radius = 4.81
+        x = taper_length
+        y = 0
+        d_to_in_left = 1.25
+        d_to_out_left = 1.65
+        d_to_in_right_bottom = 0.25
+        d_to_out_right_bottom = 0.65
+        d_to_in_right_top = 2.25
+        d_to_out_right_top = 2.65
+
+        def arc(x, y, angle1, angle2, radius):
+            circle = []
+            angle = angle1
+            while angle <= angle2:
+                distance_to_center_x = math.cos(math.radians(angle)) * radius
+                distance_to_center_y = math.sin(math.radians(angle)) * radius
+                new_x = x + distance_to_center_x
+                new_y = y + distance_to_center_y
+                circle.append((new_x, new_y))
+                angle += 1
+            angle = angle2
+            while angle >= angle1:
+                distance_to_center_x = math.cos(math.radians(angle)) * (radius + taper_start)
+                distance_to_center_y = math.sin(math.radians(angle)) * (radius + taper_start)
+                new_x = x + distance_to_center_x
+                new_y = y + distance_to_center_y
+                circle.append((new_x, new_y))
+                angle -= 1
+            self.cell.add(gdspy.Polygon(circle))
+        def mmi(x, y):
+            rectCENTER = gdspy.Rectangle((x, y), (x + mmi_length, y + mmi_width))
+            self.cell.add(rectCENTER)
+            x -= taper_length
+            taperL = gdspy.Polygon([(x, y + d_to_out_left + taper_start), (x, y + d_to_out_left),
+                (x + taper_length, y + d_to_in_left), (x + taper_length, y + d_to_in_left + taper_width)])
+            self.cell.add(taperL)
+            x += taper_length * 2 + mmi_length
+            taperTR = gdspy.Polygon([(x, y + d_to_out_right_top + taper_start), (x, y + d_to_out_right_top),
+                (x - taper_length, y + d_to_in_right_top), (x - taper_length, y + d_to_in_right_top + taper_width)])
+            self.cell.add(taperTR)
+            taperBR = gdspy.Polygon([(x, y + d_to_out_right_bottom + taper_start), (x, y + d_to_out_right_bottom),
+                (x - taper_length, y + d_to_in_right_bottom), (x - taper_length, y + d_to_in_right_bottom + taper_width)])
+            self.cell.add(taperBR)
+            return x
+        def term_up(x, y):
+            term_y = y + d_to_out_right_top + taper_start + term_radius
+            arc(x, term_y, 270, 360, term_radius)
+            self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y + 5), (x + term_radius + 0.115, term_y + 5)]))
+        def term_down(x, y):
+            term_y = y + d_to_out_right_bottom - term_radius
+            arc(x, term_y, 0, 90, term_radius)
+            self.cell.add(gdspy.Polygon([(x + term_radius, term_y), (x + term_radius + taper_start, term_y), (x + term_radius + taper_start - 0.115, term_y - 5), (x + term_radius + 0.115, term_y - 5)]))
+        x = mmi(x, y)
+        original_x = x
+        up_y = y + d_to_out_right_top + taper_start + border_radius
+        down_y = y + d_to_out_right_bottom - border_radius
+        arc(x, up_y, 270, 360, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, up_y, 90, 180, border_radius)
+        up_y += border_radius - d_to_out_left
+        x += taper_length
+        x = mmi(x, up_y)
+        term_down(x, up_y)
+        up_y += d_to_out_right_top + taper_start + border_radius
+        arc(x, up_y, 270, 360, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, up_y, 90, 180, border_radius)
+        up_y += border_radius - d_to_out_left
+        x += taper_length
+        x = mmi(x, up_y)
+        term_down(x, up_y)
+
+        x = original_x
+        arc(x, down_y, 0, 90, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, down_y, 180, 270, border_radius)
+        down_y -= border_radius + taper_start + d_to_out_left
+        x += taper_length
+        x = mmi(x, down_y)
+        term_up(x, down_y)
+        down_y += d_to_out_right_bottom - border_radius
+        arc(x, down_y, 0, 90, border_radius)
+        x += border_radius * 2 + taper_start
+        arc(x, down_y, 180, 270, border_radius)
+        down_y -= border_radius + taper_start + d_to_out_left
+        x += taper_length
+        x = mmi(x, down_y)
+        term_up(x, down_y)
+
+        self.lib.write_gds(output_text)

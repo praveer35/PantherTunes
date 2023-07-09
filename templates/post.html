@@ -3,6 +3,7 @@
    <head>
       <meta charset="utf-8">
       <title>Post Template</title>
+      <script src="https://kit.fontawesome.com/8f0aaa5215.js" crossorigin="anonymous"></script>
    </head>
    <style>
 
@@ -36,12 +37,6 @@
       }
       #right {
          float: right;
-      }
-      .divider {
-         background-color: black;
-         width: 100%;
-         height: 2px;
-         overflow: auto;
       }
       .sidebar {
          position: fixed;
@@ -164,6 +159,13 @@
             reply_id = event.target.getAttribute('name');
          }
          var textboxID = 'textbox-' + event.target.getAttribute('name');
+         if (document.getElementById(textboxID).value == '') {
+            alert('Your comment is empty.');
+            return;
+         } else if (document.getElementById(textboxID).value.split(' ').length > 600) {
+            alert('Your comment cannot be above 600 words.');
+            return;
+         }
          data = {
             'action': 'comment',
             'reply_id': reply_id,
@@ -189,6 +191,22 @@
             data = {
             'action': 'unlike',
             'comment_id': event.target.getAttribute('name')};
+         }
+         httpGetAsyncPost(window.location.href, like_stored, data);
+      }
+
+      function like_post() {
+         var post = document.getElementById('like-button-post');
+         var likesLine = document.getElementById('likes-post');
+         var likes = parseInt(likesLine.textContent.substring(7));
+         if (post.style.backgroundColor != "blue") {
+            post.style.backgroundColor = "blue";
+            likesLine.textContent = "Likes: " + (likes + 1);
+            data = {'action': 'like-post'};
+         } else {
+            post.style.backgroundColor = "#ccc";
+            likesLine.textContent = "Likes: " + (likes - 1);
+            data = {'action': 'unlike-post'};
          }
          httpGetAsyncPost(window.location.href, like_stored, data);
       }
@@ -249,28 +267,33 @@
             {% if not session.name or session.name == "": %}
             <h3>You are not signed in. Sign in to make posts and start projects!</h3>
             {% else %}
-            <h3>WELCOME, {{ session.name }}.</h3>
-            <a href="{{ url_for('create_post') }}">MAKE A POST</a>
-            <a href="{{ url_for('logout') }}">Log out</a>
-            <h3>CURRENT PROJECTS</h3>
+            <h3>WELCOME, {{ session.name }}.</h3><br><br>
+            <h3>POST YOUR WORK</h3>
+            <a href="{{ url_for('create_post') }}">
+               <button class="postbtn"><i class="fa-solid fa-pen-to-square"></i></button>
+            </a><br><br><br>
+            <!--<a href="{{ url_for('logout') }}">Log out</a>-->
+            <h3>CURRENT PROJECTS</h3><br>
             {% if len_projects == 0: %}
             <p>You have no current projects. Make a post to start one!</p>
             {% else %}
-            <ol>
-            {% for project in Projects %}
-            <li><a href="{{ url_for('project',project_id=project['project_id']) }}">{{ project['title'] }}</a></li>
+            {% for i in range(Projects|length) %}
+            <a class="proj-link" href="{{ url_for('project',project_id=Projects[i]['project_id']) }}"><strong>{{ i + 1 }}.</strong> {{ Projects[i]['title'] }}
+            {% if Projects[i]['unread'] != 0 %}
+               <span class="notif">{{ Projects[i]['unread'] }}</span>
+            {% endif %}
+            </a><br><br>
             {% endfor %}
-            </ol>
             {% endif %}
             {% endif %}
          </div>
          <br><br><br>
          <div class="forums">
             <div class="original-post">
-               {% if original_post['project_id'] != 0 and session.name not in linked_project['usernames']: %}
+               {% if original_post['project_id'] != 0 and session.name and session.name not in linked_project['usernames']: %}
                <button onclick="apply()" id="{{ original_post['post_id'] }}">Apply</button>
                {% endif %}
-               <p class="author">Posted by: {{ original_post['username'] }}</p><br>
+               <p class="author">Posted by: <a href="{{ url_for('profile_outside', username=original_post['username']) }}">{{ original_post['username'] }}</a></p><br>
                <p class="title">{{ original_post['title'] }}</h3>
                {% for para in original_post['post'] %}
                {% if para == "": %}
@@ -279,12 +302,37 @@
                <p class="desc">{{ para }}</p>
                {% endif %}
                {% endfor %}
+               {% if session.name and session.name != "": %}
+               {% if original_post['img'] == 1: %}
+               <img src="{{ url_for('upload', filename=img_file) }}" style="height:240px">
+               {% endif %}
+               {% if original_post['audio'] == 1: %}
+               <audio controls>
+                  <source src="{{ url_for('upload', filename=audio_file) }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+                </audio>
+               {% endif %}
+               {% if original_post['video'] == 1: %}
+               <video width="320px" height="240px" controls>
+                  <source src="{{ url_for('upload', filename=video_file) }}" type="video/mp4">
+                Your browser does not support the video element.
+               </video>
+               {% endif %}
+               {% endif %}
             </div>
             <div class="action-reply">
                {% if not session.name or session.name == "": %}
-               <p id="prompt-line-comment-on-original">You are not signed in. Sign in <a href="{{ url_for('sign_in') }}">here</a> to comment.</p>
+               <p id="prompt-line-comment-on-original">You are not signed in. Sign in <a href="{{ url_for('sign_in') }}">here</a> to comment and view media files.</p>
                {% else %}
-               <p id="prompt-line-comment-on-original">Comment <button class="submit" name="comment-on-original" onclick="show_box(event)">+</button></p>
+               <p id="prompt-line-comment-on-original">
+               <span id="likes-post">Likes: {{ original_post['likes'] }}</span> <button class="like" 
+               {% if original_post['post_id']|string in posts_liked: %}
+               style="background-color:blue;"
+               {% else %}
+               style="background-color:#ccc;"
+               {% endif %}
+               id="like-button-post" onclick="like_post()">+</button>
+                --- Comment <button class="submit" name="comment-on-original" onclick="show_box(event)">+</button></p>
                <div id="comment-line-comment-on-original" style="display:none;margin-top:10px;">
                   <textarea id='textbox-comment-on-original' rows="5" style="width:75%;margin-bottom:20px;"></textarea>
                   <button style="margin-left:20px;font-size:70px;width:80px;height:80px;position:relative;top:-50px;" class="submit" name="comment-on-original" onclick="reply(event)">+</button>
@@ -294,7 +342,7 @@
             <div class="divider" style="margin-bottom:20px;"></div>
             {% for i in range(0, len): %}
             <div class="comment-box" style="margin-left:{{ 60 + 30*post_comments[i]['position'] }}px;background-color:white;">
-               <p class="author">Posted by: {{ post_comments[i]['username'] }}</p>
+               <p class="author">Posted by: <a href="{{ url_for('profile_outside', username=post_comments[i]['username']) }}">{{ post_comments[i]['username'] }}</a></p>
                {% for para in post_comments[i]['comment'] %}
                {% if para == "": %}
                <p><br></p>

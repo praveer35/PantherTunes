@@ -24,6 +24,7 @@
    }
 
    function create_post() {
+      alert('d');
       if (document.getElementById('post-title').value != '' && document.getElementById('desc').value != '') {
          if (document.getElementById('project').value != 'create-new' || document.getElementById('project-title').value != '') {
             post_getdata();
@@ -64,7 +65,8 @@
                'help_needed':help_needed,
                'project_option':document.getElementById('project').value,
                'project_title':project_title,
-               'project_desc':project_desc}
+               'project_desc':project_desc,
+               'image':document.getElementById("image").value}
       httpGetAsyncPost(window_url+'/create-post', post_created, data)
    }
 
@@ -102,6 +104,34 @@
       } else {
          projectFields.style.display = "none";
       }
+   }
+
+   function validateForm() {
+      let form = document.forms["poster"];
+      if (form['title'].value.replaceAll(" ", "") == "") {
+         alert("Please enter a title.");
+         return false;
+      } else if (form['title'].value.length > 50) {
+         alert("Title cannot be over 50 characters long.");
+         return false;
+      } else if (form['desc'].value.replaceAll(" ", "") == "") {
+         alert("Your post is empty.");
+         return false;
+      } else if (form['desc'].value.split(" ").length > 500) {
+         alert("Your post cannot be over 600 words.");
+      } else if (document.getElementById('project').value == 'create-new') {
+         if (form['project-title'].value.replaceAll(" ", "") == "") {
+            alert("Please enter a project title.");
+            return false;
+         } else if (form['project-title'].value.length > 50) {
+            alert("Project title cannot be above 50 characters.");
+            return false;
+         } else if (form['project-desc'].value.split(" ").length > 30) {
+            alert("Project description cannot be above 30 words.");
+            return false;
+         }
+      }
+      return true;
    }
    </script>
 
@@ -206,47 +236,53 @@
          <br>
          <h2 id="title">Make a Post</h2>
          <div id="form-box">
-            <span>
-               Post Title: &emsp;<input id='post-title' style="width:50%;">
-            </span>
-            <span>
+            <form name="poster" method="POST" action="" onsubmit="return validateForm()" enctype="multipart/form-data">
+               <span>
+                  Post Title: &emsp;<input id='post-title' name='title' style="width:50%;">
+               </span>
+               <span>
+                  <br>
+                  <textarea id='desc' name='desc' rows="5" style="width:75%"></textarea>
+               </span>
+               Image: <input type="file" id="image" name="image" accept="image/png, image/jpeg">
+               Audio: <input type="file" id="audio" name="audio" accept="audio/wav, audio/mp3">
+               Video: <input type="file" id="video" name="video" accept="video/mp4">
                <br>
-                <textarea id='desc' rows="5" style="width:75%"></textarea>
-            </span>
-            Genre:
-            <input type="radio" name="genre" value="Default" checked> Default
-            <input type="radio" name="genre" value="Pop"> Pop
-            <input type="radio" name="genre" value="Rock"> Rock
-            <input type="radio" name="genre" value="R&B"> R&B
-            <input type="radio" name="genre" value="Rap"> Rap
-            <br>
-            Help Needed:
-            <input type="radio" name="help-needed" value="Default" checked> Default
-            <input type="radio" name="help-needed" value="Lyrics"> Lyrics
-            <input type="radio" name="help-needed" value="Melody"> Melody
-            <input type="radio" name="help-needed" value="Chords"> Chords
-            <input type="radio" name="help-needed" value="Production"> Production
-            <br><br>
-            <label for="cars">Choose a Project:</label>
-            <select name="project" id="project" onchange="updateProjectFields()">
-              <option value="no-collab">No Collaboration</option>
-              <option value="create-new">Creating a New Project</option>
-              {% for project in Projects %}
-              <option value="{{ project['project_id'] }}">{{ project['title'] }}</option>
-              {% endfor %}
-            </select>
-            <div id="project-fields" style="display:none;">
-               <h3>Let's make a quick title and description for this project.</h3>
-               <span>
-                  Project Title: &emsp;<input id='project-title' style="width:50%;">
-               </span>
-               <span>
-                  <span style="visibility:hidden;display:inline">Description: &emsp;</span>(You can write the description later, but we recommend you do it as soon as possible.)<br>
-                  Description: &emsp;<textarea id='project-desc' rows="5" style="width:75%"></textarea>
-               </span>
-            </div>
-            <br><br>
-            <button id="submit" onclick="create_post()">+</button>
+               Genre:
+               <input type="radio" name="genre" value="Default" checked> Default
+               <input type="radio" name="genre" value="Pop"> Pop
+               <input type="radio" name="genre" value="Rock"> Rock
+               <input type="radio" name="genre" value="R&B"> R&B
+               <input type="radio" name="genre" value="Rap"> Rap
+               <br>
+               Help Needed:
+               <input type="radio" name="help-needed" value="Default" checked> Default
+               <input type="radio" name="help-needed" value="Lyrics"> Lyrics
+               <input type="radio" name="help-needed" value="Melody"> Melody
+               <input type="radio" name="help-needed" value="Chords"> Chords
+               <input type="radio" name="help-needed" value="Production"> Production
+               <br><br>
+               <label for="cars">Choose a Project:</label>
+               <select name="project" id="project" onchange="updateProjectFields()">
+               <option value="no-collab">No Collaboration</option>
+               <option value="create-new">Creating a New Project</option>
+               {% for project in Projects %}
+               <option value="{{ project['project_id'] }}">{{ project['title'] }}</option>
+               {% endfor %}
+               </select>
+               <div id="project-fields" style="display:none;">
+                  <h3>Let's make a quick title and description for this project.</h3>
+                  <span>
+                     Project Title: &emsp;<input id='project-title' name='project-title' style="width:50%;">
+                  </span>
+                  <span>
+                     <span style="visibility:hidden;display:inline">Description: &emsp;</span>(You can write the description later, but we recommend you do it as soon as possible.)<br>
+                     Description: &emsp;<textarea id='project-desc' name='project-desc' rows="5" style="width:75%"></textarea>
+                  </span>
+               </div>
+               <br><br>
+               <button id="submit" type="submit">+</button>
+            </form>
          </div>
       <br><br><br>
       {% endblock %}

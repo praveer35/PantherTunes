@@ -23,49 +23,75 @@
 .subtitle {
    text-align: left;
 }
-#createbtn {
-    font-size: 50px;
-    width: 60px;
-    height: 60px;
-    color: #fff;
-    background: linear-gradient(to right, #bd00d6, #e7007fcc);
-    border-radius: 100%;
-    border: 1px solid black;
-    margin-top: -30px;
-    /*box-shadow: 4px 4px 4px #444;*/
-}
-#createbtn:hover {
-    color: #bd00d6;
-    background: #fff;
-    border: 1px solid #e7007fcc;
-    /*box-shadow: 2px 2px 2px #e7007fcc;*/
-    transition: 0.3s;
-    cursor: pointer;
-}
-#post_update, #important_links, #updates {
-   border: 1px solid gray;
+#applications {
+   border: 2px solid black;
    border-radius: 10px;
    padding-left: 20px;
    padding-right: 20px;
+   margin: 0px auto;
+   width: 60%;
 }
-#post_update {
-    float: left;
-    width: 30%;
-    height: 150px;
-}
-#important_links {
-    margin-top: 20px;
-    float: left;
-    width: 30%;
-    height: 400px;
-}
-#updates {
-    float: right;
-    width: 60%;
-    height: 800px;
+.deciders {
+   margin: 0px auto;
+   margin-top: 20px;
+   margin-bottom: 30px;
+   display: flex;
+   justify-content: center;
+   width: 100%;
 }
 .decide {
-   float: right;
+   width: 80px;
+   height: 80px;
+   font-size: 30px;
+   border-radius: 100px;
+   color: white;
+   padding: 10px;
+   box-shadow: 2px 2px 2px rgb(187, 187, 187);
+   border: 2px solid white;
+   background-image: linear-gradient(to right, #6b006b, #1a006b);
+}
+.decide:hover {
+   background-image: linear-gradient(to right, white, white);
+   box-shadow: 0px 0px 0px white;
+   cursor: pointer;
+   transition: 0.3s;
+   border-color: black;
+   color: #6b006b;
+}
+.update {
+    width: calc(100% - 60px);
+    margin-top: 15px;
+    border: 1px solid #1a006b;
+    border-radius: 10px;
+    background-color: #edfaff;
+    margin-bottom: 30px;
+    padding-left: 30px;
+    padding-right: 30px;
+    color: black;
+    overflow: hidden;
+}
+.update .title {
+    margin-top: -10px;
+    margin-bottom: -10px;
+    font-size: 16px;
+}
+.update .desc {
+    font-size: 14px;
+}
+.update .top {
+    padding-top: 0px;
+    font-size: 16px;
+}
+.update .author {
+    margin-left: 0px;
+    margin-right: 0px;
+    color: rgb(0, 24, 133);
+}
+.update .timestamp {
+    display: inline;
+    float: right;
+    color: #666;
+    font-size: 13px;
 }
 
       </style>
@@ -73,20 +99,22 @@
    <script>
 
    function decide() {
-      var ID = event.target.id;
+      var ID = event.currentTarget.id;
       var data = {};
       if (ID.charAt(0) == 'a') {
+         alert('accept');
          data = {
             'action': 'accept',
             'application_id': ID.substring(7)
          };
       } else {
+         alert('deny');
          data = {
             'action': 'deny',
             'application_id': ID.substring(5)
          };
       }
-      httpGetAsyncPost(window.location.href, decision_made, data);
+      //httpGetAsyncPost(window.location.href, decision_made, data);
    }
 
    function decision_made(data) {
@@ -118,32 +146,43 @@
       {% block content %}
       <div class="content" style="width:90%">
          <br>
-         <h2 id="title">Applications</h2>
+         <h2 id="title">{{ project['title'] }}</h2>
          <div id="sub-nav">
             <ul class="sub-menu">
                <li><a href="{{ url_for('project',project_id=project['project_id']) }}">Feed</a></li>
                <li><a style="color:#fff;" class="highlight" href="{{ url_for('project_application',project_id=project['project_id']) }}">Applications</a></li>
-               <li><a href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat</a></li>
+               <li><a href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat
+                  {% if project['unread'] != 0 %}
+                   ({{ project['unread'] }})
+                  {% endif %}
+                  </a></li>
+               <li><a href="{{ url_for('project_posts',project_id=project['project_id']) }}">All Posts</a></li>
+               <li><a href="{{ url_for('project_settings',project_id=project['project_id']) }}">Settings</a></li>
             </ul>
          </div>
-         <br><br>
-         <div id="updates">
-             <p style="font-size:20px;">Updates</p>
+         <div class="divider" style="margin-bottom:20px;margin-top:30px;"></div>
+         <div id="applications">
+             <p style="font-size:20px;">Applications</p>
              {% for application in applications: %}
-             <p>{{ application['username'] }}: {{ application['pitch'] }} 
-               {% if project['usernames'].index(session.name) == 0: %}
-               <button class="decide" id="deny-{{ application['application_id'] }}" onclick="decide()">N</button>
-               <button class="decide" id="accept-{{ application['application_id'] }}" onclick="decide()">Y</button>
+             <div class="update">
+               <p class="top">PITCH FROM <a href="{{ url_for('profile_outside', username=application['username']) }}" class="user">{{ application['username'] }}</a>:</p>
+               {% for para in application['pitch'] %}
+               {% if para == "": %}
+               <p class="title"><br></p>
+               {% else %}
+               <p class="title">{{ para }}</p>
                {% endif %}
-            </p>
+               {% endfor %}
+               <p class="timestamp">{{ application['timestamp'][0] }} {{ application['timestamp'][1] }}, {{ application['timestamp'][2] }} {{ application['timestamp'][3] }}:{{ application['timestamp'][4] }}</p>
+               <br>
+               {% if project['usernames'].index(session.name) == 0: %}
+               <div class="deciders">
+                  <button class="decide accept" id="accept-{{ application['application_id'] }}" onclick="decide()" style="margin-right:15px;"><i class="fa-solid fa-check"></i></button>
+                  <button class="decide deny" id="deny-{{ application['application_id'] }}" onclick="decide()" style="margin-left:15px;"><i class="fa-sharp fa-solid fa-xmark"></i></button>
+               </div>
+               {% endif %}
+            </div>
              {% endfor %}
-         </div>
-         <div id="post_update">
-             <p style="font-size:20px;">Post Update</p><br>
-             <button id="createbtn">+</button>
-         </div>
-         <div id="important_links">
-             <p style="font-size:20px;">Important Links</p>
          </div>
       </div>
       <br><br><br>

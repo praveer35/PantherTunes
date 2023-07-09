@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>{{ project['title'] }}</title>
+      <style>
+
+.bubble {
+   width: 100%;
+   margin: 0px auto;
+   display: block;
+   min-height: 250px;
+}
+.left {
+   float: left;
+}
+.right {
+   float: right;
+}
+#title {
+   padding-top: 50px;
+}
+.subtitle {
+   text-align: left;
+}
+#createbtn {
+    font-size: 50px;
+    width: 60px;
+    height: 60px;
+    color: #fff;
+    background: linear-gradient(to right, #bd00d6, #e7007fcc);
+    border-radius: 100%;
+    border: 1px solid black;
+    margin-top: -30px;
+    /*box-shadow: 4px 4px 4px #444;*/
+}
+#createbtn:hover {
+    color: #bd00d6;
+    background: #fff;
+    border: 1px solid #e7007fcc;
+    /*box-shadow: 2px 2px 2px #e7007fcc;*/
+    transition: 0.3s;
+    cursor: pointer;
+}
+#post_update, #important_links, #updates {
+   border: 1px solid gray;
+   border-radius: 10px;
+   padding-left: 20px;
+   padding-right: 20px;
+}
+#post_update {
+    float: left;
+    width: 30%;
+    height: 150px;
+}
+#important_links {
+    margin-top: 20px;
+    float: left;
+    width: 30%;
+    height: 400px;
+}
+#updates {
+    float: right;
+    width: 60%;
+    height: 800px;
+}
+#prompt-username {
+   width: 70%;
+}
+
+      </style>
+   </head>
+   <script>
+      path = window.location.hostname
+      if (path == '127.0.0.1'){
+         path += ':1601'
+      }
+      // else if (window.location.protocol != 'https:'){
+      //     window.location.href = 'https://domain/sign-in'
+      // }
+
+      var window_url = window.location.protocol+'//'+path;
+      redirect_to = ''
+
+      function request() {
+         var username = document.getElementById('prompt-username').value;
+         var data = {
+            'action': 'request',
+            'member': username
+         };
+         httpGetAsyncPost(window.location.href, member_action_done, data);
+      }
+
+      function member_action(event) {
+         var ID = event.target.id;
+         var data = {};
+         if (ID.charAt(0) == 'r') {
+            data = {
+               'action': 'remove',
+               'member': ID.substring(7)
+            };
+         } else if (ID.charAt(0) == 'u') {
+            data = {
+               'action': 'upgrade',
+               'member': ID.substring(8)
+            };
+         }
+         httpGetAsyncPost(window.location.href, member_action_done, data);
+      }
+
+      function leave() {
+         data = {
+            'action': 'leave'
+         };
+         httpGetAsyncPost(window.location.href, left_project, data);
+      }
+
+      function remove() {
+         data = {
+            'action': 'delete'
+         };
+         httpGetAsyncPost(window.location.href, left_project, data);
+      }
+   
+      function member_action_done(data) {
+         data = JSON.parse(data);
+         if (data['state'] == 'success') {
+            window.location.reload();
+         } else {
+            alert('Error: ' + data['state']);
+         }
+      }
+
+      function left_project(data) {
+         data = JSON.parse(data);
+         if (data['state'] == 'success') {
+            if (redirect_to != '') {
+                  redirect_to = '/'+redirect_to;
+            }
+            window.location.href = window_url + redirect_to;
+         } else {
+            alert('Error: ' + data['state']);
+         }
+      }
+   
+      function httpGetAsyncPost(theUrl, callback, data){
+         var xmlHttp = new XMLHttpRequest();
+         xmlHttp.onreadystatechange = function() {
+            if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+               callback(xmlHttp.responseText);
+            }
+         }
+         xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+         xmlHttp.send(JSON.stringify(data));
+      }
+   
+      </script>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="content" style="width:90%">
+         <br>
+         <h2 id="title">{{ project['title'] }}</h2>
+         <div id="sub-nav">
+            <ul class="sub-menu">
+               <li><a href="{{ url_for('project',project_id=project['project_id']) }}">Feed</a></li>
+               <li><a href="{{ url_for('project_application',project_id=project['project_id']) }}">Applications</a></li>
+               <li><a href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat
+                  {% if project['unread'] != 0 %}
+                   ({{ project['unread'] }})
+                  {% endif %}
+                  </a></li>
+               <li><a href="{{ url_for('project_posts',project_id=project['project_id']) }}">All Posts</a></li>
+               <li><a style="color:#fff;" class="highlight" href="{{ url_for('project_posts',project_id=project['project_id']) }}">Settings</a></li>
+            </ul>
+         </div>
+         <div class="divider" style="margin-bottom:20px;margin-top:30px;"></div>
+         {% if is_owner: %}
+         <h3>Request Member</h3>
+         <input type="text" id="prompt-username"> <button id="send-request" onclick="request()">Request</button>
+         <h3>Remove Members</h3>
+         <h4>Understand that if you remove a member, they will be able to contest the removal. Ensure your reason is valid and that it can be backed by specific chats and actions from the member.
+            If contested, the reason you gave for removing the member will be extremely important.
+         </h4>
+         <ul>
+            {% for member in usernames: %}
+            {% if session.name != member %}
+            <li>{{ member }} <button id="remove-{{ member }}" onclick="member_action(event)">Remove</button>
+            {% endif %}
+            {% endfor %}
+         </ul>
+         <h3>Select New Member as Owner</h3>
+         <h4>As owner of the project, be extremely cautious with this decision. It is irreversible unless the newly selected owner chooses to reverse the decision.</h4>
+         <h4>Powers include: application decisions, requesting members, removing members, and publishing the project.</h4>
+         <ul>
+            {% for member in usernames: %}
+            {% if session.name != member %}
+            <li>{{ member }} <button id="upgrade-{{ member }}" onclick="member_action(event)">Select</button>
+            {% endif %}
+            {% endfor %}
+         </ul>
+         {% endif %}
+         <h3>Leave</h3>
+         <h4>Take leaving <strong>EXTREMELY</strong> seriously. If you leave, you will NOT be able to rejoin the project unless you re-apply or you are specifically requested by the owner of the project.</h4>
+         {% if is_owner: %}
+         <h4><em>NOTE: As you are owner of the project, you will have to choose a member to be the next owner.</em></h4>
+         {% endif %}
+         <button id="leave" onclick="leave()">Leave</button>
+         {% if project['usernames']|length == 1: %}
+         <h3>Delete Project</h3>
+         <h4>CAUTION: You will lose all access to chats, files, and data related to the project. Note that you can only delete a project if you are the sole member, so even if you delete the project,
+            it may be reinstated if a member successfully contests their removal.
+         </h4>
+         <button id="delete" onclick="remove()">Permanently Remove</button>
+         {% endif %}
+      </div>
+      <br><br><br>
+      {% endblock %}
+   </body>
+</html>

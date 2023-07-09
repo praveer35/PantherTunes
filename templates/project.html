@@ -23,7 +23,7 @@
 .subtitle {
    text-align: left;
 }
-#createbtn {
+.createbtn {
     font-size: 50px;
     width: 60px;
     height: 60px;
@@ -34,7 +34,7 @@
     margin-top: -30px;
     /*box-shadow: 4px 4px 4px #444;*/
 }
-#createbtn:hover {
+.createbtn:hover {
     color: #bd00d6;
     background: #fff;
     border: 1px solid #e7007fcc;
@@ -42,8 +42,8 @@
     transition: 0.3s;
     cursor: pointer;
 }
-#post_update, #important_links, #updates {
-   border: 1px solid gray;
+#post_update, #important_files, #updates {
+   border: 2px solid black;
    border-radius: 10px;
    padding-left: 20px;
    padding-right: 20px;
@@ -51,47 +51,253 @@
 #post_update {
     float: left;
     width: 30%;
-    height: 150px;
+    padding-bottom: 20px;
 }
-#important_links {
+#important_files {
     margin-top: 20px;
     float: left;
     width: 30%;
-    height: 400px;
+    padding-bottom: 40px;
+    /*height: 400px;*/
 }
 #updates {
     float: right;
-    width: 60%;
-    height: 800px;
+    width: 55%;
+    /*height: 800px;*/
+}
+
+textarea, input{
+   border-radius:10px;
+   font-size: inherit;
+   font-family: inherit;
+   /*outline: 1px solid transparent;*/
+   border: 1px solid #444;
+   color:#444;
+   /* font-family: bierstadt; */
+   padding:0.7em 1em;
+   padding-left: 1em;
+   box-sizing:border-box;
+   /*background: url('/static/ui_icons/back.png') no-repeat 0.5em;*/
+   /*background-size: 1.4em;*/
+   background-color:#fff;
+   resize: none;
+}
+.feature {
+   color: white;
+   float: right;
+   margin-left: 10px;
+   display: inline;
+   font-size: 1.51vw;
+}
+.submit-file {
+   display: block;
+   margin-bottom: 10px;
+}
+.custom-file-upload {
+   border: 1px solid black;
+   border-radius: 10px;
+   padding: 10px;
+   float: left;
+}
+.custom-file-upload:hover {
+   background-color: #1a006b;
+   color: white;
+   transition: 0.3s;
+   cursor: pointer;
+}
+#submitbtn {
+   float: left;
+   margin-top: 0px;
+   width: 45px;
+   height: 45px;
+   font-size: 25px;
+   margin-left: 5px;
+   padding: 0px;
+}
+table {
+   width: 100%;
+   border-collapse: collapse;
+}
+tr:nth-child(even) {
+   background-color: rgb(214, 245, 255);
+}
+tr .remove .preview {
+   float: right;
+}
+td a {
+   text-decoration: none;
+   color: #313131;
+}
+td a:hover {
+   color: #0037ff;
+}
+.update {
+    width: calc(100% - 60px);
+    margin-top: 15px;
+    border: 1px solid #1a006b;
+    border-radius: 10px;
+    background-color: #edfaff;
+    /*box-shadow: 5px 5px 5px #333;*/
+    margin-bottom: 30px;
+    padding-left: 30px;
+    padding-right: 30px;
+    color: black;
+    overflow: hidden;
+}
+.update .title {
+    margin-top: -10px;
+    margin-bottom: -10px;
+    font-size: 25px;
+}
+.update .desc {
+    font-size: 14px;
+}
+.update .top {
+    padding-top: 0px;
+    font-size: 16px;
+}
+.update .author {
+    margin-left: 0px;
+    margin-right: 0px;
+    color: rgb(0, 24, 133);
+}
+.update .timestamp {
+    display: inline;
+    float: right;
+    color: #666;
+    font-size: 13px;
 }
 
       </style>
    </head>
+   <script>
+
+         var window_url = window.location.protocol+'//'+path;
+
+         function show_box() {
+            document.getElementById('prompt-update').style.display = "none";
+            document.getElementById('line-update').style.display = "block";
+         }
+
+         function post_update() {
+            data = {
+               'action': 'update',
+               'update': document.getElementById('textbox-update').value
+            };
+            if (data['update'].split(' ').length > 200) {
+               alert("Updates cannot be over 200 words.");
+               return;
+            } else if (data['update'].replaceAll(' ', '') == '') {
+               alert("Updates cannot be empty.");
+               return;
+            }
+            httpGetAsyncPost(window.location.href, end_func, data);
+         }
+
+         function end_func(data) {
+            data = JSON.parse(data);
+            if (data['state'] == 'success') {
+               window.location.reload();
+            } else {
+               alert('Error: ' + data['state']);
+            }
+         }
+
+         function httpGetAsyncPost(theUrl, callback, data){
+            //alert(JSON.stringify(data));
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function() {
+               if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                  callback(xmlHttp.responseText);
+               }
+            }
+            xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+            //alert('c');
+            xmlHttp.send(JSON.stringify(data));
+            //alert('d');
+         }
+   </script>
    <body>
       {% extends "template.html" %}
       {% block content %}
       <div class="content" style="width:90%">
          <br>
          <h2 id="title">{{ project['title'] }}</h2>
-         <h3>{{ project['desc'] }}</h3>
-         <h4>Members: {{ ', '.join(project['usernames'].split(' ')) }}</h4>
          <div id="sub-nav">
             <ul class="sub-menu">
                <li><a style="color:#fff;" class="highlight" href="{{ url_for('project',project_id=project['project_id']) }}">Feed</a></li>
                <li><a href="{{ url_for('project_application',project_id=project['project_id']) }}">Applications</a></li>
-               <li><a href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat</a></li>
+               <li><a href="{{ url_for('project_chat',project_id=project['project_id']) }}">Chat
+                  {% if project['unread'] != 0 %}
+                   ({{ project['unread'] }})
+                  {% endif %}
+                  </a></li>
+               <li><a href="{{ url_for('project_posts',project_id=project['project_id']) }}">All Posts</a></li>
+               <li><a href="{{ url_for('project_settings',project_id=project['project_id']) }}">Settings</a></li>
             </ul>
          </div>
-         <br><br>
+         <div class="divider" style="margin-bottom:20px;margin-top:30px;"></div>
+         <h3>{{ project['desc'] }}</h3>
+         <h4 style="text-align:center;">Members:
+         {% for i in range(0, project['usernames']|length): %}
+         {% if i == project['usernames']|length - 1: %}
+         <a class="user" href="{{ url_for('profile_outside', username=project['usernames'][i]) }}">{{ project['usernames'][i] }}</a>
+         {% else %}
+         <a class="user" href="{{ url_for('profile_outside', username=project['usernames'][i]) }}">{{ project['usernames'][i] }}</a>,
+         {% endif %}
+         {% endfor %}
+         </h4>
          <div id="updates">
-             <p style="font-size:20px;">Updates</p>
+             <p style="font-size:20px;text-align:center;">Updates<button class="postbtn" id="prompt-update" style="margin-top:-10px;margin-left:20px;margin-left:20px;font-size:30px;width:80px;height:80px;" onclick="show_box()"><i class="fa-solid fa-pen-to-square"></i></button></p>
+            <div id="line-update" style="display:none;margin-top:10px;">
+               <textarea id='textbox-update' rows="5" style="width:75%;margin-bottom:20px;"></textarea>
+               <button style="margin-left:20px;font-size:30px;width:80px;height:80px;position:relative;top:-75px;" class="postbtn" onclick="post_update()"><i class="fa-solid fa-pen-to-square"></i></button>
+            </div>
+            {% if updates|length == 0: %}
+            <h4>No updates yet. Write one to keep your team updated!</h4>
+            {% endif %}
+            {% for update in updates: %}
+            <div class="update">
+               <p class="top"><a href="{{ url_for('profile_outside', username=update['username']) }}" class="user">{{ update['username'] }}</a> posted:</p>
+               <p class="title" style="font-size:16px;">"{{ update['msg'] }}"</p>
+               <p class="timestamp">{{ update['timestamp'][0] }} {{ update['timestamp'][1] }}, {{ update['timestamp'][2] }} {{ update['timestamp'][3] }}:{{ update['timestamp'][4] }}</p>
+            </div>
+            {% endfor %}
          </div>
+         <div class="featurediv" id="post_update">
+            <a href="{{ url_for('create_post') }}">
+               <button class="featurebtn"><i class="fa-solid fa-trophy"></i></button>
+            </a>
+            <h3 class="feature">FEATURE YOUR PROJECT</h3>
+         </div>
+         <!--
          <div id="post_update">
-             <p style="font-size:20px;">Post Update</p><br>
-             <button id="createbtn">+</button>
-         </div>
-         <div id="important_links">
-             <p style="font-size:20px;">Important Links</p>
+            <p style="font-size:20px;">Post Update</p><br>
+            <button class="createbtn" id="prompt-update" onclick="show_box()">+</button>
+            <div id="line-update" style="display:none;margin-top:10px;">
+               <textarea id='textbox-update' rows="5" style="width:75%;margin-bottom:20px;"></textarea>
+               <button style="margin-left:20px;font-size:70px;width:80px;height:80px;position:relative;top:-50px;" class="createbtn" onclick="post_update()">+</button>
+            </div>
+         </div>-->
+         <div id="important_files">
+            <p style="font-size:20px;text-align:center;">Important Files</p>
+            <form name="filePoster" class="submit-file" action="" method="POST" enctype="multipart/form-data">
+               <label id="file-name" for="file" class="custom-file-upload">
+                  <i class="fa fa-cloud-upload"></i> Upload File
+               </label>
+               <input id="file" name='file' type="file" style="display:none" onchange="document.querySelector('#file-name').textContent = this.files[0].name;document.getElementById('submitbtn').style.display='inline'">
+               <button id="submitbtn" class="postbtn" type="submit" style="display:none;"><i class="fa fa-cloud-upload"></i></button>
+               <br clear="all" />
+            </form>
+            <table>
+               {% for file in files: %}
+               <tr>
+                  <td class="name"><a href="{{ url_for('upload_proj', project_id=project['project_id'], filename=file) }}" download><i class="fa-solid fa-file-arrow-down"></i> {{ file }}</a></td>
+                  <td class="remove"><a href="{{ url_for('upload_proj', project_id=project['project_id'], filename=file) }}" style="float:right"><i class="fa-solid fa-magnifying-glass"></i></a></td>
+                  <td class="preview"><a href="{{ url_for('delete_uploaded_proj', project_id=project['project_id'], filename=file) }}" style="float:right"><i class="fa-solid fa-trash"></i></a></td>
+               </tr>
+               {% endfor %}
+            </table>
          </div>
       </div>
       <br><br><br>

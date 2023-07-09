@@ -7,9 +7,13 @@
       <!--<link rel="stylesheet" href="template.css">-->
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Heebo&display=swap" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+      <script src="https://kit.fontawesome.com/8f0aaa5215.js" crossorigin="anonymous"></script>
       <style>
 
+html {
+   font-weight: 400;
+}
 #signin {
    background-color: white;
    color: #444;
@@ -21,23 +25,34 @@
    color: white;
    transition: 0.3s;
 }
+#featured {
+   color: rgb(255, 225, 0);
+   font-weight: 700;
+}
+
       </style>
    </head>
    <body>
       <div id="holder">
          <header>
             <div class="container">
-               <h1 class="logo"><a style="text-decoration:none;color:#000;" href="{{ url_for('home') }}">PantherTunes&trade;</a></h1>
+               <h1 class="logo"><a style="text-decoration:none;color:#fff;" href="{{ url_for('home') }}">PantherTunes&trade;</a></h1>
                <strong>
                   <nav>
                      <ul class="menu">
+                        <li><a id="featured" href="">Featured</a></li>
                         <li><a href="{{ url_for('about') }}">About Us</a></li>
                         <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+                        <li>
                         {% if not session.name or session.name == "": %}
-                           <li><a id="signin" href="{{ url_for('sign_in') }}">Sign In</a></li>
+                        <a id="signin" href="{{ url_for('sign_in') }}">Sign In
                         {% else %}
-                           <li><a id="signin" href="{{ url_for('profile') }}">{{ session.name }}</a></li>
+                        <a id="signin" href="{{ url_for('profile') }}">{{ session.name }}
+                        {% if session.unread and session.unread != 0: %}
+                         <span class="notif">{{ session.unread }}</span>
                         {% endif %}
+                        {% endif %}
+                        </a></li>
                      </ul>
                   </nav>
                </strong>
@@ -48,7 +63,7 @@
          {% endblock %}
          </div>
          <footer>
-            <p>Copyrighted 2022. Created by PantherTunes Inc.</p>
+            <p>Copyrighted 2023. Created by PantherTunes.</p>
          </footer>
       </div>
    </body>

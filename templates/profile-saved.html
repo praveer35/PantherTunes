@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Saved</title>
+   </head>
+   <script>
+         path = window.location.hostname
+         if (path == '127.0.0.1'){
+            path += ':1601'
+         }
+         // else if (window.location.protocol != 'https:'){
+         //     window.location.href = 'https://domain/sign-in'
+         // }
+
+         var window_url = window.location.protocol+'//'+path;
+         redirect_to = 'profile'
+         let url_string = window.location.href//if there is a redirect value in url it means we need to remember where to rediretc the user to once signed in
+         let url = new URL(url_string);
+         let c = url.searchParams.get('redirect');
+         if (c != null){
+            redirect_to = c;
+         }
+
+         function like(event) {
+            var ID = event.currentTarget.id;
+            var chosenElement = document.getElementById(ID);
+            if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+               var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+               document.getElementById("likes-" + ID.substring(8)).textContent = likes + 1;
+               chosenElement.style.backgroundColor = "white";
+               document.getElementById("i-" + ID.substring(8)).style.color = "#313131";
+               document.getElementById("likes-" + ID.substring(8)).style.color = "#313131";
+               data = {
+               'action': 'like',
+               'post_id': ID.substring(8)};
+            } else {
+               var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+               document.getElementById("likes-" + ID.substring(8)).textContent = likes - 1;
+               chosenElement.style.backgroundColor = "#313131";
+               document.getElementById("i-" + ID.substring(8)).style.color = "white";
+               document.getElementById("likes-" + ID.substring(8)).style.color = "white";
+               data = {
+               'action': 'unlike',
+               'post_id': ID.substring(8)};
+            }
+            httpGetAsyncPost(window.location.href, action_stored, data);
+         }
+
+         function save(event) {
+            var ID = event.currentTarget.id;
+            var chosenElement = document.getElementById(ID);
+            if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+               {% if session.name %}
+               document.getElementById("saves-" + ID.substring(8)).textContent = "Saved";
+               {% endif %}
+               chosenElement.style.backgroundColor = "white";
+               document.getElementById("si-" + ID.substring(8)).style.color = "#313131";
+               document.getElementById("saves-" + ID.substring(8)).style.color = "#313131";
+               data = {
+               'action': 'save',
+               'post_id': ID.substring(8)};
+            } else {
+               {% if session.name %}
+               document.getElementById("saves-" + ID.substring(8)).textContent = "Save";
+               {% endif %}
+               chosenElement.style.backgroundColor = "#313131";
+               document.getElementById("si-" + ID.substring(8)).style.color = "white";
+               document.getElementById("saves-" + ID.substring(8)).style.color = "white";
+               data = {
+               'action': 'unsave',
+               'post_id': ID.substring(8)};
+            }
+            httpGetAsyncPost(window.location.href, action_stored, data);
+         }
+
+         function action_stored(data) {
+            data = JSON.parse(data);
+            if (data['state'] != 'success') {
+               alert('Error: ' + data['state']);
+            }
+         }
+
+         function httpGetAsyncPost(theUrl, callback, data){
+            //alert(JSON.stringify(data));
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.onreadystatechange = function() {
+               if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+                  callback(xmlHttp.responseText);
+               }
+            }
+            xmlHttp.open("POST", theUrl, true); // true for asynchronous 
+            //alert('c');
+            xmlHttp.send(JSON.stringify(data));
+            //alert('d');
+         }
+
+   </script>
+   <style>
+      .submit {
+          font-size: 17px;
+          width: 30px;
+          height: 30px;
+          color: #fff;
+          background: linear-gradient(to right, #bd00d6, #e7007fcc);
+          border-radius: 100%;
+          border: 1px solid black;
+          /*box-shadow: 4px 4px 4px #444;*/
+      }
+      .submit:hover {
+          color: #bd00d6;
+          background: #fff;
+          border: 1px solid #e7007fcc;
+          /*box-shadow: 2px 2px 2px #e7007fcc;*/
+          transition: 0.3s;
+          cursor: pointer;
+      }
+      textarea, input{
+         border-radius:10px;
+         font-size: inherit;
+         font-family: inherit;
+         /*outline: 1px solid transparent;*/
+         border: 1px solid #444;
+         color:#444;
+         /* font-family: bierstadt; */
+         padding:0.7em 1em;
+         padding-left: 1em;
+         box-sizing:border-box;
+         /*background: url('/static/ui_icons/back.png') no-repeat 0.5em;*/
+         /*background-size: 1.4em;*/
+         background-color:#fff;
+         resize: none;
+      }
+      #bio {
+         margin-top: -30px;
+      }
+      .nav-sidebar {
+         position: fixed;
+         height: 200px;
+         width: max(120px, 11%);
+         left: 15px;
+         top: 50%;
+         transform: translate(0%, -45%);
+         background-image: linear-gradient(to right, #6b006b, #1a006b);
+         color: white;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      .nav-sidebar a {
+         text-decoration: none;
+         color: white;
+         display: block;
+         padding-top: 13.2px;
+         padding-bottom: 13.2px;
+         padding-left: 15px;
+         border-radius: 10px;
+      }
+      .nav-sidebar a:hover {
+         background-color: white;
+         color: #6b006b;
+         transition: 0.3s;
+      }
+      .nav-sidebar .active {
+         background-color: white;
+         color: #6b006b;
+         transition: 0.3s;
+      }
+      section {
+         min-height: 300px;
+         /* background-color: #edfaff; */
+         padding: 30px;
+         margin-bottom: 20px;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      #settings a {
+         display: block;
+         text-align: center;
+         margin: 0px auto;
+         width: 250px;
+         padding: 10px;
+         margin-bottom: 10px;
+         background-color: white;
+         color: #444;
+         text-decoration: none;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      #settings a:hover {
+         background-color: #1a006b;
+         color: white;
+         transition: 0.3s;
+         cursor: pointer;
+      }
+      #settings input {
+         width: 50%;
+         margin-right: 0px;
+         display: inline-block;
+      }
+      #settings label {
+         width: 120px;
+         display: inline-block;
+      }
+      #saved {
+         min-height: 80vh;
+      }
+      #settings p {
+         text-align: center;
+      }
+      label {
+         text-align: left;
+      }
+   </style>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="nav-sidebar">
+         <a href="{{ url_for('profile') }}" class="settings">Settings</a>
+         <a href="{{ url_for('profile_notifications') }}" class="notifications">Notifications</a>
+         <a href="{{ url_for('profile_posts') }}" class="posts">Posts</a>
+         <a href="{{ url_for('profile_saved') }}" class="saved active">Saved</a>
+      </div>
+      <div class="content" style="width:70%;margin-left:max(15%, 150px);">
+         <br>
+         <h2 id="title">{{ session.name }}</h2>
+         {% if user['bio'].replace(" ", "") != "": %}
+         <h3 id="bio">{{ user['bio'] }}</h3>
+         <br><br>
+         {% endif %}
+         <section id="saved" style="min-height: 80vh;">
+            <h3>Saved</h3>
+            <div class="feed">
+               {% for post in user_saved %}
+               <div class="post">
+                  <a class="over" style="text-decoration:none;" href="{{ url_for('post',post_id=post['post_id']) }}">
+                     <div class="post-text">
+                        <p class="top">Posted by: <span class="author">{{ post['username'] }}</span>
+                           {% if post['music_genre'] != 'default' %}
+                           to #{{ post['music_genre'] }}
+                           {% endif %}
+                           {% if post['help_needed'] != 'default' %}
+                           and #{{ post['help_needed'] }}
+                           {% endif %}
+                        </p>
+                        {% if post['project_id'] != 0 %}
+                        <span class="tag" style="background-color:#1a006b;color:white;">Project Open</span><br>
+                        {% endif %}
+                        <p class="title">{{ post['title'] }}</h3>
+                        {% for para in post['post'] %}
+                        {% if para == "": %}
+                        <p class="desc"><br></p>
+                        {% else %}
+                        <p class="desc">{{ para }}</p>
+                        {% endif %}
+                        {% endfor %}
+                        <br>
+                        {% if post['img'] == 1 %}
+                        <span class="tag">Image Attached</span>
+                        {% endif %}
+                        {% if post['audio'] == 1 %}
+                        <span class="tag">Audio Attached</span>
+                        {% endif %}
+                        {% if post['video'] == 1 %}
+                        <span class="tag">Video Attached</span>
+                        {% endif %}
+                        <span class="timestamp">{{ post['timestamp'][0] }} {{ post['timestamp'][1] }}, {{ post['timestamp'][2] }} {{ post['timestamp'][3] }}:{{ post['timestamp'][4] }}</span>
+                        <br><br>
+                     </div>
+                  </a>
+                  <div class="post-icons">
+                     {% if session.name and session.name != "" and post['post_id']|string in user['posts_liked'] %}
+                     <div id="likebox-{{ post['post_id'] }}" class="likes clicked" name="clicked" onclick="like(event)">
+                        <div class="icon-box">
+                           <span><i id="i-{{ post['post_id'] }}" style="color: #313131" class="fa-solid fa-up-long"></i></span><br>
+                           <span style="color: #313131" id="likes-{{ post['post_id'] }}" style="font-size:18px">{{ post['likes'] }}</span>
+                        </div>
+                     </div>
+                     {% else %}
+                     <div id="likebox-{{ post['post_id'] }}" class="likes" onclick="like(event)">
+                        <div class="icon-box">
+                           <span><i id="i-{{ post['post_id'] }}" class="fa-solid fa-up-long"></i></span><br>
+                           <span id="likes-{{ post['post_id'] }}" style="font-size:18px">{{ post['likes'] }}</span>
+                        </div>
+                     </div>
+                     {% endif %}
+                     <div class="comments" onclick="window.location.href='/post/{{ post['post_id'] }}';">
+                        <div class="icon-box">
+                           <span><i class="fa-solid fa-comment"></i></span><br>
+                           <span id="comments-{{ post['post_id'] }}" style="font-size:18px">{{ post['comments'] }}</span>
+                        </div>
+                     </div>
+                     <div class="share" onclick="
+                        var shareText = '127.0.0.1:1601{{ url_for('post',post_id=post['post_id']) }}';
+                        navigator.clipboard.writeText(shareText);
+                        document.getElementById('share-{{ post['post_id'] }}').textContent = 'Copied!';
+                        setTimeout(function () {
+                           document.getElementById('share-{{ post['post_id'] }}').textContent = 'Share';
+                        }, 5000);
+                     ">
+                        <div class="icon-box">
+                           <span><i class="fa-solid fa-share"></i></span><br>
+                           <span id="share-{{ post['post_id'] }}" style="font-size:12px">Share</span>
+                        </div>
+                     </div>
+                     {% if session.name and session.name != "" and post['post_id']|string in user['saved'] %}
+                     <div id="savebox-{{ post['post_id'] }}" class="save clicked" name="clicked" onclick="save(event)">
+                        <div class="icon-box">
+                           <span><i id="si-{{ post['post_id'] }}" style="color: #313131" class="fa-solid fa-bookmark"></i></span><br>
+                           <span style="color: #313131;font-size:12px" id="saves-{{ post['post_id'] }}">Saved</span>
+                        </div>
+                     </div>
+                     {% else %}
+                     <div id="savebox-{{ post['post_id'] }}" class="save" onclick="save(event)">
+                        <div class="icon-box">
+                           <span><i id="si-{{ post['post_id'] }}" class="fa-solid fa-bookmark"></i></span><br>
+                           <span id="saves-{{ post['post_id'] }}" style="font-size:12px">Save</span>
+                        </div>
+                     </div>
+                     {% endif %}
+                  </div>
+               </div>
+               {% endfor %}
+            </div>
+         </section>
+      </div>
+      <br><br><br>
+      <!--
+      <script>
+
+         const sections = document.querySelectorAll("section");
+         const navLi = document.querySelectorAll(".nav-sidebar a");
+         window.onscroll = () => {
+            var current = "";
+            let flagged = false;
+            sections.forEach((section) => {
+               const sectionTop = section.offsetTop;
+               if (pageYOffset >= sectionTop - 60) {
+                  current = section.getAttribute("id");
+               }
+            });
+            navLi.forEach((a) => {
+               a.classList.remove("active");
+               if (a.classList.contains(current)) {
+                  flagged = true;
+                  a.classList.add("active");
+               }
+            });
+            if (!flagged) {
+               document.querySelector(".settings").classList.add("active");
+            }
+         };
+         
+      </script>
+      -->
+      {% endblock %}
+   </body>
+</html>

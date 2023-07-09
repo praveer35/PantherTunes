@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+   <head>
+      <meta charset="utf-8">
+      <title>Notifications</title>
+   </head>
+   <script>
+
+         function sort_notifications() {
+            sortType = document.getElementById('notif-select').value;
+            var allNotifs = document.getElementsByClassName('all');
+            if (sortType == 'all') {
+               for (var i = 0; i < allNotifs.length; i++) {
+                  allNotifs[i].style.display = 'block';
+               }
+               return;
+            }
+            var allNotifs = document.getElementsByClassName('all');
+            for (var i = 0; i < allNotifs.length; i++) {
+               allNotifs[i].style.display = 'none';
+            }
+            var sortNotifs = document.getElementsByClassName(sortType);
+            for (var i = 0; i < sortNotifs.length; i++) {
+               sortNotifs[i].style.display = 'block';
+            }
+         }
+
+   </script>
+   <style>
+      .submit {
+          font-size: 17px;
+          width: 30px;
+          height: 30px;
+          color: #fff;
+          background: linear-gradient(to right, #bd00d6, #e7007fcc);
+          border-radius: 100%;
+          border: 1px solid black;
+          /*box-shadow: 4px 4px 4px #444;*/
+      }
+      .submit:hover {
+          color: #bd00d6;
+          background: #fff;
+          border: 1px solid #e7007fcc;
+          /*box-shadow: 2px 2px 2px #e7007fcc;*/
+          transition: 0.3s;
+          cursor: pointer;
+      }
+      textarea, input{
+         border-radius:10px;
+         font-size: inherit;
+         font-family: inherit;
+         /*outline: 1px solid transparent;*/
+         border: 1px solid #444;
+         color:#444;
+         /* font-family: bierstadt; */
+         padding:0.7em 1em;
+         padding-left: 1em;
+         box-sizing:border-box;
+         /*background: url('/static/ui_icons/back.png') no-repeat 0.5em;*/
+         /*background-size: 1.4em;*/
+         background-color:#fff;
+         resize: none;
+      }
+      #bio {
+         margin-top: -30px;
+      }
+      .nav-sidebar {
+         position: fixed;
+         height: 200px;
+         width: max(120px, 11%);
+         left: 15px;
+         top: 50%;
+         transform: translate(0%, -45%);
+         background-image: linear-gradient(to right, #6b006b, #1a006b);
+         color: white;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      .nav-sidebar a {
+         text-decoration: none;
+         color: white;
+         display: block;
+         padding-top: 13.2px;
+         padding-bottom: 13.2px;
+         padding-left: 15px;
+         border-radius: 10px;
+      }
+      .nav-sidebar a:hover {
+         background-color: white;
+         color: #6b006b;
+         transition: 0.3s;
+      }
+      .nav-sidebar .active {
+         background-color: white;
+         color: #6b006b;
+         transition: 0.3s;
+      }
+      section {
+         min-height: 300px;
+         /* background-color: #edfaff; */
+         padding: 30px;
+         margin-bottom: 20px;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      #settings a {
+         display: block;
+         text-align: center;
+         margin: 0px auto;
+         width: 250px;
+         padding: 10px;
+         margin-bottom: 10px;
+         background-color: white;
+         color: #444;
+         text-decoration: none;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      #settings a:hover {
+         background-color: #1a006b;
+         color: white;
+         transition: 0.3s;
+         cursor: pointer;
+      }
+      #settings input {
+         width: 50%;
+         margin-right: 0px;
+         display: inline-block;
+      }
+      #settings label {
+         width: 120px;
+         display: inline-block;
+      }
+      #saved {
+         min-height: 80vh;
+      }
+      #settings p {
+         text-align: center;
+      }
+      label {
+         text-align: left;
+      }
+   </style>
+   <body>
+      {% extends "template.html" %}
+      {% block content %}
+      <div class="nav-sidebar">
+         <a href="{{ url_for('profile') }}" class="settings">Settings</a>
+         <a href="{{ url_for('profile_notifications') }}" class="notifications active">Notifications</a>
+         <a href="{{ url_for('profile_posts') }}" class="posts">Posts</a>
+         <a href="{{ url_for('profile_saved') }}" class="saved">Saved</a>
+      </div>
+      <div class="content" style="width:70%;margin-left:max(15%, 150px);">
+         <br>
+         <h2 id="title">{{ session.name }}</h2>
+         {% if user['bio'].replace(" ", "") != "": %}
+         <h3 id="bio">{{ user['bio'] }}</h3>
+         <br><br>
+         {% endif %}
+         <section id="notifications">
+            <h3>Notifications</h3>
+            <span style="display:block;text-align:center;">Select Notification Type: <select name="notif-select" id="notif-select" onchange="sort_notifications()">
+               <option value="all" checked>All</option>
+               <option value="reply">Replies</option>
+               <option value="apply">Applications to Your Projects</option>
+               <option value="app-accept">Accepted Applications</option>
+               <option value="app-deny">Denied Applications</option>
+               <option value="remove">Removals</option>
+               <option value="upgrade">Upgraded to Owner</option>
+               <option value="project-request">Requested to Project</option>
+            </select></span>
+            {% for notif in notifications %}
+            <p class="all {{ notif['type'] }}">
+            {% if notif['unread'] == 1: %}
+            UNREAD:
+            {% endif %}
+            {{ notif['message'] }}
+            {% if notif['type'] == 'reply': %}
+            <button onclick="window.location.href='{{ notif['link'] }}';">Go to post</button>
+            {% elif notif['type'] == 'app-accept' or notif['type'] == 'upgrade': %}
+            <button onclick="window.location.href='{{ notif['link'] }}';">Go to project</button>
+            {% elif notif['type'] == 'apply': %}
+            <button onclick="window.location.href='{{ notif['link'] }}';">Go to applications</button>
+            {% elif notif['type'] == 'remove': %}
+            <button onclick="window.location.href='{{ notif['link'] }}';">Contest</button>
+            {% elif notif['type'] == 'project-request': %}
+            <button onclick="window.location.href='{{ notif['link'] }}';">Accept</button>
+            {% endif %}
+            </p>
+            {% endfor %}
+         </section>
+      </div>
+      <br><br><br>
+      <!--
+      <script>
+
+         const sections = document.querySelectorAll("section");
+         const navLi = document.querySelectorAll(".nav-sidebar a");
+         window.onscroll = () => {
+            var current = "";
+            let flagged = false;
+            sections.forEach((section) => {
+               const sectionTop = section.offsetTop;
+               if (pageYOffset >= sectionTop - 60) {
+                  current = section.getAttribute("id");
+               }
+            });
+            navLi.forEach((a) => {
+               a.classList.remove("active");
+               if (a.classList.contains(current)) {
+                  flagged = true;
+                  a.classList.add("active");
+               }
+            });
+            if (!flagged) {
+               document.querySelector(".settings").classList.add("active");
+            }
+         };
+         
+      </script>
+      -->
+      {% endblock %}
+   </body>
+</html>

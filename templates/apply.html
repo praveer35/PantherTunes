@@ -26,8 +26,9 @@
    function apply() {
       if (document.getElementById('pitch').value != '') {
         application_getdata()
-      }
-      else {
+      } else if (document.getElementById('pitch').value.split(' ').length > 100) {
+         alert('Your pitch cannot be above 100 words.');
+      } else {
          //document.getElementById('error_text').innerHTML = 'Please enter a username, password, and email';
          alert('Please enter your pitch');
       }
@@ -35,7 +36,7 @@
 
    function application_getdata() {
       data = {'pitch':document.getElementById('pitch').value};
-      httpGetAsyncPost(window_url+'/apply/' + {{ post_id }}, application_created, data)
+      httpGetAsyncPost(window_url+'/apply/' + {{ post_id }}, application_created, data);
    }
 
    function application_created(data) {
@@ -167,7 +168,15 @@
          <br>
          <h2 id="title">Apply to "{{ project['title'] }}"</h2>
          <h3>{{ project['desc'] }}</h3>
-         <h4>Members: {{ ', '.join(project['usernames'].split(' ')) }}</h4>
+         <h4>Members:
+            {% for i in range(0, project['usernames']|length): %}
+            {% if i == project['usernames']|length - 1: %}
+            <a href="{{ url_for('profile_outside', username=project['usernames'][i]) }}">{{ project['usernames'][i] }}</a>
+            {% else %}
+            <a href="{{ url_for('profile_outside', username=project['usernames'][i]) }}">{{ project['usernames'][i] }}</a>,
+            {% endif %}
+            {% endfor %}
+         </h4>
          <div id="form-box">
             <span>
                Username: &emsp;{{ session.name }}

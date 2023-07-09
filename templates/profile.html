@@ -23,17 +23,111 @@
          }
 
          function delete_post(event) {
-            data = {'post_id': event.target.id};
-            httpGetAsyncPost(window_url+'/profile', post_deleted, data);
+            data = {
+               'action': 'delete',
+               'post_id': event.target.id
+            };
+            httpGetAsyncPost(window_url+'/profile', end_func, data);
          }
 
-         function post_deleted(data) {
+         function edit_bio() {
+            data = {
+               'action': 'edit-bio',
+               'bio': document.getElementById('textbox-bio').value.replaceAll("\n", " ")
+            };
+            if (data['bio'].split(' ').length > 50) {
+               alert('Your bio cannot be above 50 words.');
+               return;
+            }
+            httpGetAsyncPost(window_url+'/profile', end_func, data);
+         }
+
+         function like(event) {
+            var ID = event.currentTarget.id;
+            var chosenElement = document.getElementById(ID);
+            if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+               var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+               document.getElementById("likes-" + ID.substring(8)).textContent = likes + 1;
+               chosenElement.style.backgroundColor = "white";
+               document.getElementById("i-" + ID.substring(8)).style.color = "#313131";
+               document.getElementById("likes-" + ID.substring(8)).style.color = "#313131";
+               data = {
+               'action': 'like',
+               'post_id': ID.substring(8)};
+            } else {
+               var likes = parseInt(document.getElementById("likes-" + ID.substring(8)).textContent);
+               document.getElementById("likes-" + ID.substring(8)).textContent = likes - 1;
+               chosenElement.style.backgroundColor = "#313131";
+               document.getElementById("i-" + ID.substring(8)).style.color = "white";
+               document.getElementById("likes-" + ID.substring(8)).style.color = "white";
+               data = {
+               'action': 'unlike',
+               'post_id': ID.substring(8)};
+            }
+            httpGetAsyncPost(window.location.href, action_stored, data);
+         }
+
+         function save(event) {
+            var ID = event.currentTarget.id;
+            var chosenElement = document.getElementById(ID);
+            if ((event.currentTarget.getAttribute('name') != "clicked" && chosenElement.style.backgroundColor != "white") || (chosenElement.style.backgroundColor == "#313131" || chosenElement.style.backgroundColor == "rgb(49, 49, 49)")) {
+               {% if session.name %}
+               document.getElementById("saves-" + ID.substring(8)).textContent = "Saved";
+               {% endif %}
+               chosenElement.style.backgroundColor = "white";
+               document.getElementById("si-" + ID.substring(8)).style.color = "#313131";
+               document.getElementById("saves-" + ID.substring(8)).style.color = "#313131";
+               data = {
+               'action': 'save',
+               'post_id': ID.substring(8)};
+            } else {
+               {% if session.name %}
+               document.getElementById("saves-" + ID.substring(8)).textContent = "Save";
+               {% endif %}
+               chosenElement.style.backgroundColor = "#313131";
+               document.getElementById("si-" + ID.substring(8)).style.color = "white";
+               document.getElementById("saves-" + ID.substring(8)).style.color = "white";
+               data = {
+               'action': 'unsave',
+               'post_id': ID.substring(8)};
+            }
+            httpGetAsyncPost(window.location.href, action_stored, data);
+         }
+
+         function update_social(event) {
+            var ID = event.currentTarget.id;
+            var handle = document.getElementById('input-' + ID).value;
+            data = {
+               'action': 'update-social',
+               'social': ID,
+               'handle': handle
+            };
+            httpGetAsyncPost(window.location.href, social_updated, data);
+         }
+
+         function action_stored(data) {
+            data = JSON.parse(data);
+            if (data['state'] != 'success') {
+               alert('Error: ' + data['state']);
+            }
+         }
+
+         function end_func(data) {
             data = JSON.parse(data)
             if (data['state'] == 'success') {
                if (redirect_to != '') {
                   redirect_to = '/'+redirect_to;
                }
                window.location.href = window_url+redirect_to;
+            } else {
+               alert('Error: ' + data['state']);
+            }
+         }
+
+         function social_updated(data) {
+            data = JSON.parse(data)
+            if (data['state'] == 'success') {
+               document.getElementById('success-' + data['id']).style.visibility = 'visible';
             } else {
                alert('Error: ' + data['state']);
             }
@@ -53,41 +147,225 @@
             //alert('d');
          }
 
+         function show_box() {
+            document.getElementById('prompt-line-bio').style.display = "none";
+            document.getElementById('comment-line-bio').style.display = "block";
+            document.getElementById('textbox-bio').value = document.getElementById('bio').textContent;
+         }
+         
+         function sort_notifications() {
+            sortType = document.getElementById('notif-select').value;
+            var allNotifs = document.getElementsByClassName('all');
+            if (sortType == 'all') {
+               for (var i = 0; i < allNotifs.length; i++) {
+                  allNotifs[i].style.display = 'block';
+               }
+               return;
+            }
+            var allNotifs = document.getElementsByClassName('all');
+            for (var i = 0; i < allNotifs.length; i++) {
+               allNotifs[i].style.display = 'none';
+            }
+            var sortNotifs = document.getElementsByClassName(sortType);
+            for (var i = 0; i < sortNotifs.length; i++) {
+               sortNotifs[i].style.display = 'block';
+            }
+         }
+
+         function sort_posts() {
+            let to_url = '/profile';
+            to_url += '/sort/' + document.getElementById('post-select').value + '#posts';
+            window.location.href = to_url;
+         }
+
    </script>
    <style>
-      
+      .submit {
+          font-size: 17px;
+          width: 30px;
+          height: 30px;
+          color: #fff;
+          background: linear-gradient(to right, #bd00d6, #e7007fcc);
+          border-radius: 100%;
+          border: 1px solid black;
+          /*box-shadow: 4px 4px 4px #444;*/
+      }
+      .submit:hover {
+          color: #bd00d6;
+          background: #fff;
+          border: 1px solid #e7007fcc;
+          /*box-shadow: 2px 2px 2px #e7007fcc;*/
+          transition: 0.3s;
+          cursor: pointer;
+      }
+      textarea, input{
+         border-radius:10px;
+         font-size: inherit;
+         font-family: inherit;
+         /*outline: 1px solid transparent;*/
+         border: 1px solid #444;
+         color:#444;
+         /* font-family: bierstadt; */
+         padding:0.7em 1em;
+         padding-left: 1em;
+         box-sizing:border-box;
+         /*background: url('/static/ui_icons/back.png') no-repeat 0.5em;*/
+         /*background-size: 1.4em;*/
+         background-color:#fff;
+         resize: none;
+      }
+      #bio {
+         margin-top: -30px;
+      }
+      .nav-sidebar {
+         position: fixed;
+         height: 200px;
+         width: max(120px, 11%);
+         left: 15px;
+         top: 50%;
+         transform: translate(0%, -45%);
+         background-image: linear-gradient(to right, #6b006b, #1a006b);
+         color: white;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      .nav-sidebar a {
+         text-decoration: none;
+         color: white;
+         display: block;
+         padding-top: 13.2px;
+         padding-bottom: 13.2px;
+         padding-left: 15px;
+         border-radius: 10px;
+      }
+      .nav-sidebar a:hover {
+         background-color: white;
+         color: #6b006b;
+         transition: 0.3s;
+      }
+      .nav-sidebar .active {
+         background-color: white;
+         color: #6b006b;
+         transition: 0.3s;
+      }
+      section {
+         min-height: 300px;
+         /* background-color: #edfaff; */
+         padding: 30px;
+         margin-bottom: 20px;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      #settings a {
+         display: block;
+         text-align: center;
+         margin: 0px auto;
+         width: 250px;
+         padding: 10px;
+         margin-bottom: 10px;
+         background-color: white;
+         color: #444;
+         text-decoration: none;
+         border: 1px solid black;
+         border-radius: 10px;
+      }
+      #settings a:hover {
+         background-color: #1a006b;
+         color: white;
+         transition: 0.3s;
+         cursor: pointer;
+      }
+      #settings input {
+         width: 50%;
+         margin-right: 0px;
+         display: inline-block;
+      }
+      #settings label {
+         width: 120px;
+         display: inline-block;
+      }
+      #saved {
+         min-height: 80vh;
+      }
+      #settings p {
+         text-align: center;
+      }
+      label {
+         text-align: left;
+      }
    </style>
    <body>
       {% extends "template.html" %}
       {% block content %}
-      <div class="content" style="width:90%">
+      <div class="nav-sidebar">
+         <a href="{{ url_for('profile') }}" class="settings active">Settings</a>
+         <a href="{{ url_for('profile_notifications') }}" class="notifications">Notifications</a>
+         <a href="{{ url_for('profile_posts') }}" class="posts">Posts</a>
+         <a href="{{ url_for('profile_saved') }}" class="saved">Saved</a>
+      </div>
+      <div class="content" style="width:70%;margin-left:max(15%, 150px);">
          <br>
          <h2 id="title">{{ session.name }}</h2>
+         {% if user['bio'].replace(" ", "") != "": %}
+         <h3 id="bio">{{ user['bio'] }}</h3>
          <br><br>
-         <a href="{{ url_for('logout') }}">Log out</a>
-         <br>
-         <div class="feed">
-            {% if len > 0: %}
-            {% for post in user_posts %}
-            <div class="post">
-               <p class="title">{{ post['title'] }}</h3>
-               {% for para in post['post'] %}
-               {% if para == "": %}
-               <p class="desc"><br></p>
-               {% else %}
-               <p class="desc">{{ para }}</p>
-               {% endif %}
-               {% endfor %}
-               <p class="author">Posted by: {{ post['username'] }}</p>
-               <button id="{{ post['post_id'] }}" onclick="delete_post(event)">Delete</button>
-            </div>
-            {% endfor %}
+         {% endif %}
+         <section id="settings">
+            <h3>Settings</h3>
+            <a href="{{ url_for('logout') }}" style="background-color:#1a006b;color:white;">Log out</a>
+            <a href="">Change Username</a>
+            {% if user['bio'].replace(" ", "") == "": %}
+            <p id="prompt-line-bio">Add Bio <button style="width:30px;height:30px;font-size:13px;padding:0px;padding-bottom:3px;" class="postbtn" onclick="show_box()"><i class="fa-solid fa-pencil"></i></button></p>
             {% else %}
-            <p>No posts yet. Click <a href="{{ url_for('create_post') }}">here</a> to make your first post!</p>
+            <p id="prompt-line-bio">Edit Bio <button style="width:30px;height:30px;font-size:13px;padding:0px;padding-bottom:3px;" class="postbtn" onclick="show_box()"><i class="fa-solid fa-pencil"></i></button></p>
             {% endif %}
-         </div>
+            <div id="comment-line-bio" style="display:none;margin-top:10px;">
+               <textarea id='textbox-bio' rows="5" style="width:75%;margin-bottom:0px;"></textarea>
+               <button style="margin-left:20px;font-size:30px;width:80px;height:80px;position:relative;top:-75px;" class="postbtn" onclick="edit_bio()"><i class="fa-solid fa-pencil"></i></button>
+            </div>
+            <p><label><i class="fa-brands fa-instagram"></i> Instagram:</label>@ <input id="input-instagram" type="text" value="{{ user['instagram'] }}"/>
+               <button style="width:30px;height:30px;font-size:13px;padding:0px;padding-bottom:3px;" class="postbtn" id="instagram" onclick="update_social(event)"><i class="fa-solid fa-pencil"></i></button>
+               <span style="color:rgb(0, 162, 0);visibility:hidden;" id="success-instagram">Updated!</span></p>
+            <p><label><i class="fa-brands fa-tiktok"></i> Tiktok:</label>@ <input id="input-tiktok" type="text" value="{{ user['tiktok'] }}" />
+               <button style="width:30px;height:30px;font-size:13px;padding:0px;padding-bottom:3px;" class="postbtn" id="tiktok" onclick="update_social(event)"><i class="fa-solid fa-pencil"></i></button>
+               <span style="color:rgb(0, 162, 0);visibility:hidden;" id="success-tiktok">Updated!</span></p>
+            <p><label><i class="fa-brands fa-spotify"></i> Spotify: </label>@ <input id="input-spotify" type="text" value="{{ user['spotify'] }}" />
+               <button style="width:30px;height:30px;font-size:13px;padding:0px;padding-bottom:3px;" class="postbtn" id="spotify" onclick="update_social(event)"><i class="fa-solid fa-pencil"></i></button>
+               <span style="color:rgb(0, 162, 0);visibility:hidden;" id="success-spotify">Updated!</span></p>
+            <p><label><i class="fa-solid fa-music"></i> Apple Music: </label>@ <input id="input-apple_music" type="text" value="{{ user['apple_music'] }}" />
+               <button style="width:30px;height:30px;font-size:13px;padding:0px;padding-bottom:3px;" class="postbtn" id="apple_music" onclick="update_social(event)"><i class="fa-solid fa-pencil"></i></button>
+               <span style="color:rgb(0, 162, 0);visibility:hidden;" id="success-apple_music">Updated!</span></p>
+         </section>
       </div>
       <br><br><br>
+      <!--
+      <script>
+
+         const sections = document.querySelectorAll("section");
+         const navLi = document.querySelectorAll(".nav-sidebar a");
+         window.onscroll = () => {
+            var current = "";
+            let flagged = false;
+            sections.forEach((section) => {
+               const sectionTop = section.offsetTop;
+               if (pageYOffset >= sectionTop - 60) {
+                  current = section.getAttribute("id");
+               }
+            });
+            navLi.forEach((a) => {
+               a.classList.remove("active");
+               if (a.classList.contains(current)) {
+                  flagged = true;
+                  a.classList.add("active");
+               }
+            });
+            if (!flagged) {
+               document.querySelector(".settings").classList.add("active");
+            }
+         };
+         
+      </script>
+      -->
       {% endblock %}
    </body>
 </html>

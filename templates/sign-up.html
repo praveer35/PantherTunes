@@ -41,7 +41,18 @@
         // device = detect_device()
         data = {'username':document.getElementById('username').value,
                     'password':document.getElementById('password').value,
-                    'email':document.getElementById('email').value}
+                    'email':document.getElementById('email').value};
+        if (data['username'].match(/^[a-zA-Z][a-zA-Z0-9_$-]*$/) == null) {
+            alert("Username must consist of alphanumeric characters, '-', '$', or '_', and start with a letter.");
+            return;
+        } else if (data['password'].length < 8 || data['password'].length > 40) {
+            alert("Password must be between 8 and 40 characters long.");
+            return;
+        } else if (data['email'].match(/^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,3}$/) == null) {
+            alert("Invalid email address.");
+            return;
+        }
+        document.getElementById('error_text').innerHTML = 'Validating email (~10 sec)';
         //alert('b');
         httpGetAsyncPost(window_url+'/sign-up', signed_up,data)
     }
