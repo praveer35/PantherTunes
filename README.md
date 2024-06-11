@@ -1,0 +1,1 @@
+A full-stack Python Flask web application allowing users to share their music, give feedback to others, and collaborate in teams. Features integrated such as posts filtering, profiles, shared file lockers, group chat systems, and posting/commenting/replying and upvoting/sharing.
